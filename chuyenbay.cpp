@@ -52,7 +52,9 @@ void HuyChuyenBay(PTRCB head, char maCB[]) {
         p->cb.DSVE.ds = NULL;
     }
 
-    p->cb.TRANGTHAI = 0;
+    delete[] p->cb.DSVE.ds;
+    p->cb.DSVE.ds = NULL;
+    p->cb.DSVE.soLuongVe = 0;
 }
 void SuaNgayGioChuyenBay(PTRCB head, char maCB[], DateTime tgMoi) {
     PTRCB p = TimChuyenBay(head, maCB);

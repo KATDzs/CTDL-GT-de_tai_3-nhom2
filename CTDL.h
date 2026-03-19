@@ -83,3 +83,4 @@ void InChuyenBayTheoNgayVaNoiDen(PTRCB head, int ngay, int thang, int nam, char 
 void ThongKeSoLuotBay(PTRCB head, DSMayBay dsMB, TK kq[]);
 void SapXepGiamDanTheoSoLuot(TK kq[], int n);
 bool TrungNgay(DateTime a, int ngay, int thang, int nam);
+bool DatVe(PTRCB head, char maCB[], int soVe, char cmnd[]);
