@@ -1,4 +1,5 @@
 #include "MayBay.h"
+#include "maybay.h"
 
 bool KiemTraTrungSoHieu(string soHieu)
 {
