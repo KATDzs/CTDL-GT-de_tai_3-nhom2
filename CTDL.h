@@ -65,6 +65,7 @@ struct nodeHK {
     nodeHK* left;
     nodeHK* right;
 };
+
 struct TK {
     char SOHIEU[16];
     int soLuot;
@@ -84,3 +85,6 @@ void ThongKeSoLuotBay(PTRCB head, DSMayBay dsMB, TK kq[]);
 void SapXepGiamDanTheoSoLuot(TK kq[], int n);
 bool TrungNgay(DateTime a, int ngay, int thang, int nam);
 bool DatVe(PTRCB head, char maCB[], int soVe, char cmnd[]);
+=======
+typedef nodeHK* TreeHK;
+
