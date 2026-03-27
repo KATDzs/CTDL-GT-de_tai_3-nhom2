@@ -65,6 +65,11 @@ bool DatVe(PTRCB head, char maCB[], int soVe, char cmnd[]) {
         cout << "Chua khoi tao ve!\n";
         return false;
     }
+    // Kiểm tra CMND rỗng
+    if (strlen(cmnd) == 0) {
+        cout << "CMND khong hop le!\n";
+        return false;
+    }
     // Kiểm tra số vé hợp lệ
     if (soVe < 1 || soVe > p->cb.DSVE.soLuongVe) {
         cout << "So ve khong hop le!\n";
@@ -80,11 +85,6 @@ bool DatVe(PTRCB head, char maCB[], int soVe, char cmnd[]) {
     // Kiểm tra đã có người đặt chưa
     if (p->cb.DSVE.ds[soVe - 1].SOCMND[0] != '\0') {
         cout << "Ve da duoc dat!\n";
-        return false;
-    }
-    // Kiểm tra CMND rỗng
-    if (strlen(cmnd) == 0) {
-        cout << "CMND khong hop le!\n";
         return false;
     }
     // Đặt vé
