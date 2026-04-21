@@ -2,6 +2,7 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <fstream>
 using namespace std;
 
 PTRCB TaoNodeChuyenBay(ChuyenBay cb) {
@@ -103,11 +104,26 @@ void LuuChuyenBayFile(PTRCB head, ofstream &f) {
     }
 }
 
+void ThemCuoiCB(PTRCB &head, ChuyenBay cb) {
+    nodeCB* p = new nodeCB;
+    p->cb = cb;
+    p->next = NULL;
+
+    if (head == NULL) {
+        head = p;
+    } else {
+        PTRCB q = head;
+        while (q->next != NULL) q = q->next;
+        q->next = p;
+    }
+}
+
 void DocChuyenBayFile(PTRCB &head, ifstream &f) {
     while (!f.eof()) {
         ChuyenBay cb;
 
         f.getline(cb.MACB, 16, '|');
+
         if (strlen(cb.MACB) == 0) break;
 
         f >> cb.TGKHOIHANH.ngay
