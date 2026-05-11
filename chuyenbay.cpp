@@ -2,7 +2,6 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
-#include <fstream>
 using namespace std;
 
 PTRCB TaoNodeChuyenBay(ChuyenBay cb) {
@@ -101,20 +100,6 @@ void LuuChuyenBayFile(PTRCB head, ofstream &f) {
           << p->cb.SOCHO << endl;
 
         p = p->next;
-    }
-}
-
-void ThemCuoiCB(PTRCB &head, ChuyenBay cb) {
-    nodeCB* p = new nodeCB;
-    p->cb = cb;
-    p->next = NULL;
-
-    if (head == NULL) {
-        head = p;
-    } else {
-        PTRCB q = head;
-        while (q->next != NULL) q = q->next;
-        q->next = p;
     }
 }
 

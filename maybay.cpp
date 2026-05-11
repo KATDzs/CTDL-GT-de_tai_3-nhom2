@@ -1,80 +1,113 @@
 #include "CTDL.h"
 #include <fstream>
+#include <iostream>
+#include <cstring>
+#include "maybay.h"
+using namespace std;
 
-nodeHK* TaoNodeHanhKhach(HanhKhach hk) {
-    nodeHK* p = new nodeHK;
-    p->hk = hk;
-    p->left = p->right = NULL;
-    return p;
-}
+// xoa may bay theo so hieu
+void XoaMayBay()
+{
+    string soHieu;
+    cout << "Nhap so hieu can xoa: ";
+    cin >> soHieu;
 
-void ThemHanhKhach(TreeHK &root, HanhKhach hk) {
-    if (root == NULL) {
-        root = TaoNodeHanhKhach(hk);
+    int index = TimMayBay(soHieu);
+
+    if (index == -1)
+    {
+        cout << "Khong tim thay!\n";
         return;
     }
 
-    int cmp = strcmp(hk.SOCMND, root->hk.SOCMND);
-
-    if (cmp < 0)
-        ThemHanhKhach(root->left, hk);
-    else if (cmp > 0)
-        ThemHanhKhach(root->right, hk);
-    // nếu trùng thì bỏ qua
+    delete dsmb.nodes[index];
+    for (int i = index; i < dsmb.n - 1; i++) {
+        dsmb.nodes[i] = dsmb.nodes[i + 1];
+    }
+    dsmb.nodes[--dsmb.n] = nullptr;
+    cout << "Xoa thanh cong!\n";
 }
 
-nodeHK* TimHanhKhach(TreeHK root, const char* cmnd) {
-    if (root == NULL) return NULL;
+void SuaMayBay()
+{
+    string soHieu;
+    cout << "Nhap so hieu can sua: ";
+    cin >> soHieu;
 
-    int cmp = strcmp(cmnd, root->hk.SOCMND);
+    int index = TimMayBay(soHieu);
 
-    if (cmp == 0) return root;
-    else if (cmp < 0) return TimHanhKhach(root->left, cmnd);
-    else return TimHanhKhach(root->right, cmnd);
+    if (index == -1)
+    {
+        cout << "Khong tim thay!\n";
+        return;
+    }
+
+    cout << "Nhap loai moi: ";
+    cin.ignore();
+    string loai;
+    getline(cin, loai);
+    strncpy(dsmb.nodes[index]->LOAI, loai.c_str(), 40);
+    dsmb.nodes[index]->LOAI[40] = '\0';
+
+    cout << "Nhap so ghe moi: ";
+    cin >> dsmb.nodes[index]->SOCHO;
+
+    cout << "Sua thanh cong!\n";
 }
-void LuuHanhKhachFile(TreeHK root, ofstream &f) {
-    if (root == NULL) return;
 
-    LuuHanhKhachFile(root->left, f);
+void ThemMayBay()
+{
+    if (dsmb.n >= MAX_MB) {
+        cout << "Danh sach may bay day!\n";
+        return;
+    }
 
-    f << root->hk.SOCMND << "|"
-      << root->hk.HO << "|"
-      << root->hk.TEN << "|"
-      << root->hk.PHAI << endl;
+    MayBay* mb = new MayBay;
 
-    LuuHanhKhachFile(root->right, f);
+    string soHieu;
+    cout << "Nhap so hieu: ";
+    cin >> soHieu;
+
+    // kiem tra trung
+    if (KiemTraTrungSoHieu(soHieu))
+    {
+        cout << "So hieu bi trung!\n";
+        delete mb;
+        return;
+    }
+
+    // copy so hieu vao struct
+    strncpy(mb->SOHIEU, soHieu.c_str(), 15);
+    mb->SOHIEU[15] = '\0';
+
+    cout << "Nhap loai may bay: ";
+    cin.ignore(); // tránh lỗi getline bị skip
+    string loai;
+    getline(cin, loai);
+    strncpy(mb->LOAI, loai.c_str(), 40);
+    mb->LOAI[40] = '\0';
+
+    cout << "Nhap so ghe: ";
+    cin >> mb->SOCHO;
+
+    dsmb.nodes[dsmb.n++] = mb;
+    cout << "Them thanh cong!\n";
 }
 
-void DocHanhKhachFile(TreeHK &root, ifstream &f) {
-    while (!f.eof()) {
-        HanhKhach hk;
-
-        f.getline(hk.SOCMND, 16, '|');
-        if (strlen(hk.SOCMND) == 0) break;
-
-        f.getline(hk.HO, 51, '|');
-        f.getline(hk.TEN, 11, '|');
-        f.getline(hk.PHAI, 4);
-
-        ThemHanhKhach(root, hk);
+void LuuMayBayFile(DSMayBay dsmb_local, ofstream &f) {
+    f << dsmb_local.n << endl;
+    for (int i = 0; i < dsmb_local.n; i++) {
+        f << dsmb_local.nodes[i]->SOHIEU << "|"
+          << dsmb_local.nodes[i]->LOAI << "|"
+          << dsmb_local.nodes[i]->SOCHO << endl;
     }
 }
 
-
-void LuuMayBayFile(DSMayBay dsmb, ofstream &f) {
-    f << dsmb.n << endl;
-    for (int i = 0; i < dsmb.n; i++) {
-        f << dsmb.nodes[i]->SOHIEU << "|"
-          << dsmb.nodes[i]->LOAI << "|"
-          << dsmb.nodes[i]->SOCHO << endl;
-    }
-}
-
-void DocMayBayFile(DSMayBay &dsmb, ifstream &f) {
-    f >> dsmb.n;
+void DocMayBayFile(DSMayBay &dsmb_local, ifstream &f) {
+    f >> dsmb_local.n;
     f.ignore();
 
-    for (int i = 0; i < dsmb.n; i++) {
+    for (int i = 0; i < dsmb_local.n; i++) {
         MayBay* mb = new MayBay;
 
         f.getline(mb->SOHIEU, 16, '|');
@@ -82,6 +115,6 @@ void DocMayBayFile(DSMayBay &dsmb, ifstream &f) {
         f >> mb->SOCHO;
         f.ignore();
 
-        dsmb.nodes[i] = mb;
+        dsmb_local.nodes[i] = mb;
     }
 }

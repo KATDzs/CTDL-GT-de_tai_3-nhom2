@@ -88,3 +88,6 @@ bool DatVe(PTRCB head, char maCB[], int soVe, char cmnd[]);
 
 typedef nodeHK* TreeHK;
 
+// Thêm khai báo biến DSMayBay toàn cục
+extern DSMayBay dsmb;
+
