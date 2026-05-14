@@ -86,7 +86,9 @@ void SapXepGiamDanTheoSoLuot(TK kq[], int n);
 bool TrungNgay(DateTime a, int ngay, int thang, int nam);
 bool DatVe(PTRCB head, char maCB[], int soVe, char cmnd[]);
 
-typedef nodeHK* TreeHK;
+// Thêm prototype thao tác hành khách (đã có trong hanhkhach.cpp)
+void ThemHanhKhach(TreeHK &root, HanhKhach hk);
+nodeHK* TimHanhKhach(TreeHK root, const char* cmnd);
 
 // Thêm khai báo biến DSMayBay toàn cục
 extern DSMayBay dsmb;
