@@ -93,3 +93,57 @@ KẾT LUẬN: Tài liệu này là bản thiết kế chi tiết để hiện th
 - c) Triển khai trực tiếp interactive menu trong main.cpp theo spec.
 
 Chọn 1 trong (a,b,c) để tôi cung cấp patch mã nguồn tối thiểu tương ứng.
+
+{ 
+## Menu UI options — các lựa chọn và hướng triển khai
+
+1) Numeric CLI (hiện tại)
+- Mô tả: menu bằng số (1–n), người dùng nhập số và Enter.
+- Ưu: đơn giản, dễ debug, không cần thư viện.
+- Nhược: kém trực quan, không có highlight/di chuyển nhanh.
+- Khi dùng: giữ code hiện tại.
+
+2) Interactive terminal (termios, arrow keys)
+- Mô tả: menu text với highlight; dùng termios để đọc phím mũi tên, Enter, Esc.
+- Ưu: nhẹ, không cần thư viện ngoài, cho cảm giác "interactive".
+- Nhược: phải xử lý raw input, cross‑platform cần khác biệt (Windows).
+- Hướng triển khai nhanh: viết ui trong main.cpp hoặc ui.cpp, dùng enableRawMode/getch, vẽ menu, highlight current index, Enter để chọn, Esc để back.
+- Biên dịch: không cần flag đặc biệt; có sẵn trên macOS/Linux.
+
+3) ncurses (TUI) — khuyến nghị cho TUI đẹp
+- Mô tả: dùng ncurses để vẽ menu, màu, cửa sổ con, input forms, hỗ trợ chuột.
+- Ưu: giao diện chuyên nghiệp, nhiều widget (scroll, textbox), cross‑terminal.
+- Nhược: cần lib ngoài, học thêm API.
+- Hướng triển khai: tạo ui.cpp dùng ncurses (initscr(), keypad(), color pairs), gọi business logic từ các callback.
+- Cài trên mac: `brew install ncurses`
+- Biên dịch: `g++ *.cpp -lncurses -o main`
+
+4) Minimal GUI (Qt / wxWidgets) hoặc Web UI
+- Mô tả: giao diện window/web hiện đại.
+- Ưu: thân thiện người dùng, dễ tìm hiểu bằng chuột.
+- Nhược: phức tạp, cài đặt nặng, thay đổi lớn trong project.
+- Khi dùng: tách backend logic (các hàm trong .cpp) thành thư viện, tạo frontend riêng.
+
+5) Hybrid — numeric fallback + enhanced input
+- Mô tả: vẫn giữ lựa chọn số làm fallback, thêm small interactive bits (confirmation modal, input masks, date input interactive).
+- Ưu: an toàn, cải thiện UX mà ít thay đổi.
+- Khuyến nghị: thực hiện trước khi chuyển sang ncurses.
+
+Gợi ý UX cụ thể để "làm đẹp" menu (áp dụng với termios hoặc ncurses)
+- Highlight lựa chọn hiện tại (inverse colors).
+- Thanh trạng thái (dòng cuối) hiển thị phím tắt / hướng dẫn nhanh.
+- Confirmation dialog cho xóa/hủy ("Are you sure? (y/N)").
+- Paginate khi danh sách quá dài (next/prev).
+- Input masking cho CMND / ngày giờ (mẫu hiển thị và xóa khi gõ).
+- Màu sắc: errors (red), success (green), prompts (cyan).
+- Hỗ trợ tìm nhanh: nhấn '/' để tìm theo từ khóa (tên, mã).
+
+Kiến trúc đề xuất (ít xáo trộn logic)
+- Tách UI ra ui.cpp/h: chỉ chứa render + input handling, gọi các hàm nghiệp vụ hiện có.
+- Giữ business logic trong các file hiện tại (maybay.cpp, chuyenbay.cpp, ve.cpp, hanhkhach.cpp).
+- Build: `g++ ui.cpp *.cpp -lncurses -o main` (nếu dùng ncurses) hoặc `g++ *.cpp -o main` (termios/numeric).
+
+Kết luận ngắn:
+- Nếu muốn "đẹp nhanh" và nhẹ: triển khai termios interactive (hiện có phần DateTime interactive là bước đầu).
+- Nếu muốn giao diện chuyên nghiệp, đầu tư vào ncurses (khuyến nghị cho project CLI).
+}
