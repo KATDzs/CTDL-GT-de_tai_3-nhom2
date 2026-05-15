@@ -88,7 +88,7 @@ void SuaMayBay()
 
     while (true)
     {
-        cout << "Sua so ghe (0 - " << MAX_MB << "): ";
+        cout << "Sua so ghe (" << MIN_SO_GHE << " - " << MAX_SO_GHE << "): ";
         cin >> soGhe;
 
         if (cin.fail())
@@ -99,15 +99,15 @@ void SuaMayBay()
             continue;
         }
 
-        if (soGhe < 0)
+        if (soGhe < MIN_SO_GHE)
         {
-            cout << "Loi: So ghe khong duoc am!\n";
+            cout << "Loi: So ghe phai lon hon hoac bang " << MIN_SO_GHE << "!\n";
             continue;
         }
 
-        if (soGhe > MAX_MB)
+        if (soGhe > MAX_SO_GHE)
         {
-            cout << "Loi: So ghe khong duoc vuot qua " << MAX_MB << "!\n";
+            cout << "Loi: So ghe khong duoc vuot qua " << MAX_SO_GHE << "!\n";
             continue;
         }
 
@@ -140,7 +140,8 @@ void ThemMayBay()
             cout << "Danh sach may bay day!\n";
             return;
         }
-        cout << "Con " << (MAX_MB - dsmb.n) << " cho trong.\n";
+        // rõ nghĩa là số slot máy bay còn trống (không phải số ghế)
+        cout << "Con " << (MAX_MB - dsmb.n) << " slot may bay cho trong.\n";
         MayBay* mb = new MayBay;
 
         string soHieu;
@@ -186,7 +187,7 @@ string input;
 
 while (true)
 {
-    cout << "Nhap so ghe (20 - " << MAX_MB << "): ";
+    cout << "Nhap so ghe (" << MIN_SO_GHE << " - " << MAX_SO_GHE << "): ";
     cin >> input;
 
     bool isNumber = true;
@@ -207,21 +208,15 @@ while (true)
 
     soGhe = stoi(input);
 
-    if (soGhe < 0)
+    if (soGhe < MIN_SO_GHE)
     {
-        cout << "Loi: So ghe khong duoc am!\n";
+        cout << "Loi: So ghe phai lon hon hoac bang " << MIN_SO_GHE << "!\n";
         continue;
     }
 
-    if (soGhe > MAX_MB)
+    if (soGhe > MAX_SO_GHE)
     {
-        cout << "Loi: So ghe khong duoc vuot qua " << MAX_MB << "!\n";
-        continue;
-    }
-
-    if (soGhe < 20)
-    {
-        cout << "Loi: So ghe khong duoc duoi 20!\n";
+        cout << "Loi: So ghe khong duoc vuot qua " << MAX_SO_GHE << "!\n";
         continue;
     }
 
