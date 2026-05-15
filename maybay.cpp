@@ -4,7 +4,7 @@
 #include <cstring>
 #include "maybay.h"
 using namespace std;
-const int MAX_MB = 300;
+
 // xoa may bay theo so hieu
 void XoaMayBay()
 {
@@ -20,9 +20,12 @@ void XoaMayBay()
         return;
     }
 
-    if (dsmb.nodes[index] != nullptr)
-    delete dsmb.nodes[index];
-    dsmb.nodes[index] != nullptr;
+    // If node exists, delete it and (optionally) clear the pointer before shifting
+    if (dsmb.nodes[index] != nullptr) {
+        delete dsmb.nodes[index];
+        dsmb.nodes[index] = nullptr;
+    }
+
     for (int i = index; i < dsmb.n - 1; i++) {
         dsmb.nodes[i] = dsmb.nodes[i + 1];
     }
@@ -183,7 +186,7 @@ string input;
 
 while (true)
 {
-    cout << "Nhap so ghe (0 - " << MAX_MB << "): ";
+    cout << "Nhap so ghe (20 - " << MAX_MB << "): ";
     cin >> input;
 
     bool isNumber = true;
@@ -213,6 +216,12 @@ while (true)
     if (soGhe > MAX_MB)
     {
         cout << "Loi: So ghe khong duoc vuot qua " << MAX_MB << "!\n";
+        continue;
+    }
+
+    if (soGhe < 20)
+    {
+        cout << "Loi: So ghe khong duoc duoi 20!\n";
         continue;
     }
 

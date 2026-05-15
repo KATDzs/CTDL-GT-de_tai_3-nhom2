@@ -88,6 +88,7 @@ void SuaNgayGioChuyenBay(PTRCB head, char maCB[], DateTime tgMoi) {
 void LuuChuyenBayFile(PTRCB head, ofstream &f) {
     PTRCB p = head;
     while (p != NULL) {
+        // header info
         f << p->cb.MACB << "|"
           << p->cb.TGKHOIHANH.ngay << " "
           << p->cb.TGKHOIHANH.thang << " "
@@ -97,7 +98,22 @@ void LuuChuyenBayFile(PTRCB head, ofstream &f) {
           << p->cb.SANBAYDEN << "|"
           << p->cb.TRANGTHAI << "|"
           << p->cb.SOHIEUMB << "|"
-          << p->cb.SOCHO << endl;
+          << p->cb.SOCHO << "|";
+
+        // write all ticket SOCMND tokens (ensure always SOCHO tokens for robust parsing)
+        int so = p->cb.SOCHO;
+        if (p->cb.DSVE.ds != NULL && p->cb.DSVE.soLuongVe == so) {
+            for (int i = 0; i < so; i++) {
+                // write SOCMND (may be empty)
+                f << p->cb.DSVE.ds[i].SOCMND << "|";
+            }
+        } else {
+            // no DSVE allocated -> write empty tokens
+            for (int i = 0; i < so; i++) {
+                f << "|";
+            }
+        }
+        f << endl;
 
         p = p->next;
     }
@@ -116,7 +132,7 @@ void DocChuyenBayFile(PTRCB &head, ifstream &f) {
           >> cb.TGKHOIHANH.nam
           >> cb.TGKHOIHANH.gio
           >> cb.TGKHOIHANH.phut;
-        f.ignore();
+        f.ignore(); // skip delimiter '|'
 
         f.getline(cb.SANBAYDEN, 41, '|');
         f >> cb.TRANGTHAI;
@@ -124,7 +140,22 @@ void DocChuyenBayFile(PTRCB &head, ifstream &f) {
 
         f.getline(cb.SOHIEUMB, 16, '|');
         f >> cb.SOCHO;
-        f.ignore();
+        f.ignore(); // skip the '|' before ticket tokens
+
+        // allocate DSVE and read SOCHO SOCMND tokens separated by '|'
+        if (cb.SOCHO > 0) {
+            cb.DSVE.ds = new Ve[cb.SOCHO];
+            cb.DSVE.soLuongVe = cb.SOCHO;
+            for (int i = 0; i < cb.SOCHO; i++) {
+                // read up to next '|' into SOCMND
+                f.getline(cb.DSVE.ds[i].SOCMND, 16, '|');
+                cb.DSVE.ds[i].SOVE = i + 1;
+                // Ensure string terminator exists (getline does)
+            }
+        } else {
+            cb.DSVE.ds = NULL;
+            cb.DSVE.soLuongVe = 0;
+        }
 
         ThemCuoiCB(head, cb);
     }

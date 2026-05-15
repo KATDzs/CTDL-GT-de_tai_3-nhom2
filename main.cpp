@@ -407,10 +407,80 @@ void runTui(PTRCB &dscb, TreeHK &dshk) {
 
 #endif
 
+// Save all data to files
+void SaveAll(PTRCB head, TreeHK root) {
+    // maybay
+    ofstream fm("maybay.txt");
+    if (fm.is_open()) {
+        LuuMayBayFile(dsmb, fm);
+        fm.close();
+        cout << "Da luu maybay.txt\n";
+    } else {
+        cerr << "Khong the mo maybay.txt de ghi\n";
+    }
+
+    // chuyenbay
+    ofstream fc("chuyenbay.txt");
+    if (fc.is_open()) {
+        LuuChuyenBayFile(head, fc);
+        fc.close();
+        cout << "Da luu chuyenbay.txt\n";
+    } else {
+        cerr << "Khong the mo chuyenbay.txt de ghi\n";
+    }
+
+    // hanhkhach
+    ofstream fh("hanhkhach.txt");
+    if (fh.is_open()) {
+        LuuHanhKhachFile(root, fh);
+        fh.close();
+        cout << "Da luu hanhkhach.txt\n";
+    } else {
+        cerr << "Khong the mo hanhkhach.txt de ghi\n";
+    }
+}
+
+// Load all data from files
+void LoadAll(PTRCB &head, TreeHK &root) {
+    // maybay
+    // clear existing maybay list to avoid leaks
+    XoaToanBo();
+    ifstream fm("maybay.txt");
+    if (fm.is_open()) {
+        DocMayBayFile(dsmb, fm);
+        fm.close();
+        cout << "Da doc maybay.txt\n";
+    } // else: no file yet, skip
+
+    // chuyenbay
+    ifstream fc("chuyenbay.txt");
+    if (fc.is_open()) {
+        DocChuyenBayFile(head, fc);
+        fc.close();
+        cout << "Da doc chuyenbay.txt\n";
+    }
+
+    // hanhkhach
+    ifstream fh("hanhkhach.txt");
+    if (fh.is_open()) {
+        DocHanhKhachFile(root, fh);
+        fh.close();
+        cout << "Da doc hanhkhach.txt\n";
+    }
+}
+
 int main() {
-	dsmb.n = 0;
-	PTRCB dscb = NULL;
-	TreeHK dshk = NULL;
-	runTui(dscb, dshk);
-	return 0;
+    dsmb.n = 0;
+    PTRCB dscb = NULL;
+    TreeHK dshk = NULL;
+
+    // load existing data if có
+    LoadAll(dscb, dshk);
+
+    runTui(dscb, dshk);
+
+    // save before exit
+    SaveAll(dscb, dshk);
+
+    return 0;
 }
