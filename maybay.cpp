@@ -20,7 +20,9 @@ void XoaMayBay()
         return;
     }
 
+    if (dsmb.nodes[index] != nullptr)
     delete dsmb.nodes[index];
+    dsmb.nodes[index] != nullptr;
     for (int i = index; i < dsmb.n - 1; i++) {
         dsmb.nodes[i] = dsmb.nodes[i + 1];
     }
@@ -31,28 +33,101 @@ void XoaMayBay()
 void SuaMayBay()
 {
     string soHieu;
-    cout << "Nhap so hieu can sua: ";
+    cout << "Nhap so hieu may bay can sua: ";
     cin >> soHieu;
 
     int index = TimMayBay(soHieu);
-
     if (index == -1)
     {
         cout << "Khong tim thay!\n";
         return;
     }
 
-    cout << "Nhap loai moi: ";
-    cin.ignore();
-    string loai;
-    getline(cin, loai);
-    strncpy(dsmb.nodes[index]->LOAI, loai.c_str(), 40);
-    dsmb.nodes[index]->LOAI[40] = '\0';
+    MayBay* mb = dsmb.nodes[index];
 
-    cout << "Nhap so ghe moi: ";
-    cin >> dsmb.nodes[index]->SOCHO;
+    while (true)
+    {
+        cout << "Sua so hieu (toi da 15 ky tu): ";
+        cin >> soHieu;
 
-    cout << "Sua thanh cong!\n";
+        if (cin.fail())
+        {
+            cout << "Loi: Nhap chuoi khong hop le!\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+            continue;
+        }
+
+        if (soHieu.length() == 0)
+        {
+            cout << "Loi: So hieu khong duoc rong!\n";
+            continue;
+        }
+
+        if (soHieu.length() > 15)
+        {
+            cout << "Loi: So hieu khong duoc qua 15 ky tu!\n";
+            continue;
+        }
+
+        if (KiemTraTrungSoHieu(soHieu) && soHieu != string(mb->SOHIEU))
+        {
+            cout << "Loi: So hieu bi trung!\n";
+            continue;
+        }
+
+        break;
+    }
+
+    strcpy(mb->SOHIEU, soHieu.c_str());
+    
+        int soGhe;
+
+    while (true)
+    {
+        cout << "Sua so ghe (0 - " << MAX_MB << "): ";
+        cin >> soGhe;
+
+        if (cin.fail())
+        {
+            cout << "Loi: Vui long nhap so!\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+            continue;
+        }
+
+        if (soGhe < 0)
+        {
+            cout << "Loi: So ghe khong duoc am!\n";
+            continue;
+        }
+
+        if (soGhe > MAX_MB)
+        {
+            cout << "Loi: So ghe khong duoc vuot qua " << MAX_MB << "!\n";
+            continue;
+        }
+
+        break;
+    }
+
+    mb->SOCHO = soGhe;
+
+        cout << "Sua loai may bay (toi da 40 ky tu): ";
+        cin.ignore(10000, '\n');
+        string loai;
+        getline(cin, loai);
+
+        if (loai.length() > 40)
+        {
+            cout << "Loi: Loai may bay khong duoc qua 40 ky tu!\n";
+            return;
+        }
+
+        strncpy(mb->LOAI, loai.c_str(), 40);
+        mb->LOAI[40] = '\0';
+        cout << "Sua thanh cong!\n";
+
 }
 
 void ThemMayBay()
@@ -104,36 +179,47 @@ void ThemMayBay()
         strcpy(mb->SOHIEU, soHieu.c_str());
     
         int soGhe;
+string input;
 
-    while (true)
+while (true)
+{
+    cout << "Nhap so ghe (0 - " << MAX_MB << "): ";
+    cin >> input;
+
+    bool isNumber = true;
+    for (char c : input)
     {
-        cout << "Nhap so ghe (0 - " << MAX_MB << "): ";
-        cin >> soGhe;
-
-        if (cin.fail())
+        if (!isdigit(c))
         {
-            cout << "Loi: Vui long nhap so!\n";
-            cin.clear();
-            cin.ignore(10000, '\n');
-            continue;
+            isNumber = false;
+            break;
         }
-
-        if (soGhe < 0)
-        {
-            cout << "Loi: So ghe khong duoc am!\n";
-            continue;
-        }
-
-        if (soGhe > MAX_MB)
-        {
-            cout << "Loi: So ghe khong duoc vuot qua " << MAX_MB << "!\n";
-            continue;
-        }
-
-        break;
     }
 
-    mb->SOCHO = soGhe;
+    if (!isNumber)
+    {
+        cout << "Loi: Vui long nhap so!\n";
+        continue;
+    }
+
+    soGhe = stoi(input);
+
+    if (soGhe < 0)
+    {
+        cout << "Loi: So ghe khong duoc am!\n";
+        continue;
+    }
+
+    if (soGhe > MAX_MB)
+    {
+        cout << "Loi: So ghe khong duoc vuot qua " << MAX_MB << "!\n";
+        continue;
+    }
+
+    break;
+}
+
+        mb->SOCHO = soGhe;
 
         cout << "Nhap loai may bay (toi da 40 ky tu): ";
         cin.ignore(10000, '\n');
@@ -143,14 +229,16 @@ void ThemMayBay()
         if (loai.length() > 40)
         {
             cout << "Loi: Loai may bay khong duoc qua 40 ky tu!\n";
+            delete mb;
             return;
         }
 
         strncpy(mb->LOAI, loai.c_str(), 40);
         mb->LOAI[40] = '\0';
+
         dsmb.nodes[dsmb.n++] = mb;
-        cout << "Them thanh cong!\n";
-}
+        cout << "Them may bay thanh cong!\n";
+    }
 
 void LuuMayBayFile(DSMayBay dsmb_local, ofstream &f) {
     f << dsmb_local.n << endl;
@@ -159,6 +247,13 @@ void LuuMayBayFile(DSMayBay dsmb_local, ofstream &f) {
           << dsmb_local.nodes[i]->LOAI << "|"
           << dsmb_local.nodes[i]->SOCHO << endl;
     }
+}
+
+void XoaToanBo()
+{
+    for (int i = 0; i < dsmb.n; i++)
+        delete dsmb.nodes[i];
+    dsmb.n = 0;
 }
 
 void DocMayBayFile(DSMayBay &dsmb_local, ifstream &f) {
