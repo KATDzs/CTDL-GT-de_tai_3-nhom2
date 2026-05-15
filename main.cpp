@@ -1,3 +1,5 @@
+#define _HAS_STD_BYTE 0
+#include <windows.h>
 #include "CTDL.h"
 #include "maybay.h"
 #include <iostream>
