@@ -4,6 +4,8 @@ using namespace std;
 
 /*  HẰNG SỐ  */
 const int MAX_MB = 300;
+const int MIN_SO_GHE = 20;
+const int MAX_SO_GHE = 300;
 
 /*  MÁY BAY  */
 struct MayBay {
