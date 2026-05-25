@@ -140,7 +140,9 @@ void ThemMayBay()
             cout << "Danh sach may bay day!\n";
             return;
         }
-        cout << "Con " << (MAX_MB - dsmb.n) << " cho trong.\n";
+        // MAX_MB la kich thuoc mang may bay, khong phai so ghe — tranh hieu nham "cho trong"
+        cout << "Danh sach may bay con the them " << (MAX_MB - dsmb.n)
+             << " may bay nua (toi da " << MAX_MB << " may bay).\n";
         MayBay* mb = new MayBay;
 
         string soHieu;
