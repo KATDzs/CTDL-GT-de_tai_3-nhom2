@@ -3,14 +3,13 @@
 #include <iostream>
 #include <cstring>
 #include "maybay.h"
+#include "ui.h"
 using namespace std;
-
 // xoa may bay theo so hieu
 void XoaMayBay()
 {
     string soHieu;
-    cout << "Nhap so hieu can xoa: ";
-    cin >> soHieu;
+    if (!uiReadWord("Nhap so hieu can xoa:", soHieu)) return;
 
     int index = TimMayBay(soHieu);
 
@@ -36,8 +35,7 @@ void XoaMayBay()
 void SuaMayBay()
 {
     string soHieu;
-    cout << "Nhap so hieu may bay can sua: ";
-    cin >> soHieu;
+    if (!uiReadWord("Nhap so hieu may bay can sua:", soHieu)) return;
 
     int index = TimMayBay(soHieu);
     if (index == -1)
@@ -50,16 +48,7 @@ void SuaMayBay()
 
     while (true)
     {
-        cout << "Sua so hieu (toi da 15 ky tu): ";
-        cin >> soHieu;
-
-        if (cin.fail())
-        {
-            cout << "Loi: Nhap chuoi khong hop le!\n";
-            cin.clear();
-            cin.ignore(10000, '\n');
-            continue;
-        }
+        if (!uiReadWord("Sua so hieu (toi da 15 ky tu):", soHieu)) return;
 
         if (soHieu.length() == 0)
         {
@@ -88,18 +77,7 @@ void SuaMayBay()
 
     while (true)
     {
-        cout << "Sua so ghe (" << MIN_SO_GHE << " - " << MAX_SO_GHE << "): ";
-        cin >> soGhe;
-
-        if (cin.fail())
-        {
-            cout << "Loi: Vui long nhap so!\n";
-            cin.clear();
-            cin.ignore(10000, '\n');
-            continue;
-        }
-
-        if (soGhe < MIN_SO_GHE)
+        if (!uiReadInt("Sua so ghe (" + to_string(MIN_SO_GHE) + " - " + to_string(MAX_SO_GHE) + "):", soGhe)) return;
         {
             cout << "Loi: So ghe phai lon hon hoac bang " << MIN_SO_GHE << "!\n";
             continue;
@@ -116,10 +94,8 @@ void SuaMayBay()
 
     mb->SOCHO = soGhe;
 
-        cout << "Sua loai may bay (toi da 40 ky tu): ";
-        cin.ignore(10000, '\n');
         string loai;
-        getline(cin, loai);
+        if (!uiReadLine("Sua loai may bay (toi da 40 ky tu):", loai)) return;
 
         if (loai.length() > 40)
         {
@@ -147,15 +123,9 @@ void ThemMayBay()
 
         while (true)
         {
-            cout << "Nhap so hieu (toi da 15 ky tu): ";
-            cin >> soHieu;
-
-            if (cin.fail())
-            {
-                cout << "Loi: Nhap chuoi khong hop le!\n";
-                cin.clear();
-                cin.ignore(10000, '\n');
-                continue;
+            if (!uiReadWord("Nhap so hieu (toi da 15 ky tu):", soHieu)) {
+                delete mb;
+                return;
             }
 
             if (soHieu.length() == 0)
@@ -182,30 +152,13 @@ void ThemMayBay()
         strcpy(mb->SOHIEU, soHieu.c_str());
     
         int soGhe;
-string input;
 
 while (true)
 {
-    cout << "Nhap so ghe (" << MIN_SO_GHE << " - " << MAX_SO_GHE << "): ";
-    cin >> input;
-
-    bool isNumber = true;
-    for (char c : input)
-    {
-        if (!isdigit(c))
-        {
-            isNumber = false;
-            break;
-        }
+    if (!uiReadInt("Nhap so ghe (" + to_string(MIN_SO_GHE) + " - " + to_string(MAX_SO_GHE) + "):", soGhe)) {
+        delete mb;
+        return;
     }
-
-    if (!isNumber)
-    {
-        cout << "Loi: Vui long nhap so!\n";
-        continue;
-    }
-
-    soGhe = stoi(input);
 
     if (soGhe < MIN_SO_GHE)
     {
@@ -224,10 +177,11 @@ while (true)
 
         mb->SOCHO = soGhe;
 
-        cout << "Nhap loai may bay (toi da 40 ky tu): ";
-        cin.ignore(10000, '\n');
         string loai;
-        getline(cin, loai);
+        if (!uiReadLine("Nhap loai may bay (toi da 40 ky tu):", loai)) {
+            delete mb;
+            return;
+        }
 
         if (loai.length() > 40)
         {
