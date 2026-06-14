@@ -94,40 +94,41 @@ static void uiFlushInput() {
 #endif
 }
 
-static bool uiReadChars(const string& prompt, string& out, bool allowSpaces) {
-    cout << prompt << " (Esc: huy) ";
-    out.clear();
+static bool uiReadChars(const string& prompt, string& out, bool allowSpaces, bool showCancelHint = false) {
+    // Use canonical (getline) input for form fields to avoid raw-mode issues
+    // that can make numeric keys / IME sequences invisible on some mac terminals.
     uiFlushInput();
-
-    while (true) {
-        int c = uiGetch();
-        if (c == -1) continue;
-
-        if (c == 27) {
-            cout << "\n";
-            uiCancelInput();
-            return false;
-        }
-        if (c == '\r' || c == '\n') {
 #ifndef _WIN32
-            uiDisableRaw(); // disable raw before returning on UNIX/mac
+    // Ensure terminal is in canonical (cooked) mode so line editing/echo work normally.
+    uiDisableRaw();
 #endif
-            cout << "\n";
-            return true;
-        }
-        if (c == 127 || c == 8) {
-            if (!out.empty()) {
-                out.pop_back();
-                cout << "\b \b";
-            }
-            continue;
-        }
-        if (c >= 32 && c <= 126) {
-            if (!allowSpaces && c == ' ') continue;
-            out += (char)c;
-            cout << (char)c;
-        }
+    // Print prompt; optionally suppress the "(Esc/q: huy)" hint when caller requests.
+    cout << prompt;
+    if (showCancelHint) cout << " (Esc/q: huy)";
+    cout << " ";
+    out.clear();
+
+    string line;
+    if (!std::getline(cin, line)) {
+        // input error / EOF
+        uiInputCancelled = true;
+        return false;
     }
+
+    // If user typed only 'q' or 'Q' treat as cancel (backwards-compatible)
+    if ((line == "q" || line == "Q") && line.length() == 1) {
+        uiCancelInput();
+        return false;
+    }
+
+    if (!allowSpaces) {
+        // take first token only
+        size_t pos = line.find_first_of(" \t");
+        if (pos != string::npos) line = line.substr(0, pos);
+    }
+
+    out = line;
+    return true;
 }
 
 bool uiReadLine(const string& prompt, string& out) {
@@ -447,9 +448,8 @@ void uiRunApp(PTRCB &dscb, TreeHK &dshk) {
             default: break;
         }
 
-        if (uiConsumeInputCancel()) continue;
-        if (choice != 0 && choice != 1) {
-            uiPause();
-        }
+        
     }
 }
+
+
