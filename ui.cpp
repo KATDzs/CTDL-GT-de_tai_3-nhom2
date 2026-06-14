@@ -76,12 +76,16 @@ static int uiGetch() {
 #endif
 
 static void uiCancelInput() {
+#ifndef _WIN32
+    uiDisableRaw(); // ensure raw mode disabled on UNIX/mac before printing/returning
+#endif
     uiInputCancelled = true;
     cout << "\nDa huy thao tac.\n";
 }
 
 static bool uiReadChars(const string& prompt, string& out, bool allowSpaces) {
-    cout << prompt << " (Esc/q: huy) ";
+    cout << prompt << " ";
+    cout.flush(); // ensure prompt is visible before entering raw mode
     out.clear();
 
     while (true) {
@@ -93,6 +97,9 @@ static bool uiReadChars(const string& prompt, string& out, bool allowSpaces) {
             return false;
         }
         if (c == '\r' || c == '\n') {
+#ifndef _WIN32
+            uiDisableRaw(); // disable raw before returning on UNIX/mac
+#endif
             cout << "\n";
             return true;
         }
