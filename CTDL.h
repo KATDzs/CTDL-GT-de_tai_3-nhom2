@@ -45,7 +45,7 @@ struct ChuyenBay {
     char SANBAYDEN[41];      // Nơi đến
     int TRANGTHAI = 1;           // 0:hủy, 1:còn vé, 2:hết vé, 3:hoàn tất
     char SOHIEUMB[16];
-    int SOCHO;               // liên kết máy bay
+    int SOCHO;               
     DanhSachVe DSVE;
 };
 
@@ -89,7 +89,7 @@ void SapXepGiamDanTheoSoLuot(TK kq[], int n);
 bool TrungNgay(DateTime a, int ngay, int thang, int nam);
 bool DatVe(PTRCB head, char maCB[], int soVe, char cmnd[]);
 
-// Thêm prototype thao tác hành khách (đã có trong hanhkhach.cpp)
+
 void ThemHanhKhach(TreeHK &root, HanhKhach hk);
 nodeHK* TimHanhKhach(TreeHK root, const char* cmnd);
 

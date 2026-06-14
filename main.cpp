@@ -8,8 +8,7 @@
 #include <sstream>
 using namespace std;
 
-// Thêm các file cài đặt (giữ như trước)
-#include "data.cpp"
+
 #include "maybay.cpp"
 #include "danhsachmaybay.cpp"
 #include "kiemtrasohieu.cpp"

@@ -5,6 +5,9 @@
 #include <sstream>
 using namespace std;
 
+// Khởi tạo biến DSMayBay toàn cục
+DSMayBay dsmb = {0, {nullptr}};
+
 void HienThi()
 {
     string lines[UI_REF_MAX_LINES];

@@ -71,7 +71,7 @@ void HuyChuyenBay(PTRCB head, char maCB[]) {
     }
 
     if (p->cb.DSVE.ds != NULL) {
-        delete[] p->cb.DSVE.ds;  // ✅ GIẢI PHÓNG VÉ
+        delete[] p->cb.DSVE.ds;  
         p->cb.DSVE.ds = NULL;
         p->cb.DSVE.soLuongVe = 0;
     }
