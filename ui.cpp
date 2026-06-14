@@ -49,7 +49,7 @@ static void uiEnableRaw() {
     // Make reads return immediately or after a short timeout so that
     // pressing Esc alone doesn't block waiting for additional bytes.
     raw.c_cc[VMIN] = 0;
-    raw.c_cc[VTIME] = 1; // tenths of a second
+    raw.c_cc[VTIME] = 10; // tenths of a second (1 second for macOS arrow keys)
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
     ui_raw = true;
 }
@@ -406,7 +406,7 @@ int uiMenu(const string& title, const string items[], int itemCount, const strin
 }
 
 // --- handlers ---
-extern void handleMayBayCLI(PTRCB &dscb);
+extern void handleMayBayCLI(PTRCB &dscb, TreeHK &dshk);
 extern void handleChuyenBayCLI(PTRCB &dscb, TreeHK &dshk);
 extern void handleDatVeCLI(PTRCB &dscb, TreeHK &dshk);
 extern void handleHuyVeCLI(PTRCB &dscb, TreeHK &dshk);
@@ -436,7 +436,7 @@ void uiRunApp(PTRCB &dscb, TreeHK &dshk) {
         if (choice == -1 || choice == 8) break;
 
         switch (choice) {
-            case 0: handleMayBayCLI(dscb); break;
+            case 0: handleMayBayCLI(dscb, dshk); break;
             case 1: handleChuyenBayCLI(dscb, dshk); break;
             case 2: handleDatVeCLI(dscb, dshk); break;
             case 3: handleHuyVeCLI(dscb, dshk); break;

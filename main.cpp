@@ -20,6 +20,10 @@ using namespace std;
 #include "thongke.cpp"
 #include "ui.cpp"
 
+// Forward declarations
+void SaveAll(PTRCB head, TreeHK root);
+void LoadAll(PTRCB &head, TreeHK &root);
+
 // --- NEW: CLI handlers extracted from previous main loop ---
 // Each handler uses std::cin / std::cout (CLI). TUI will call endwin(), invoke handler, then restart ncurses.
 
@@ -267,7 +271,7 @@ static PTRCB ChonChuyenBayTheoSoHieu(PTRCB dscb, const string& mucDich) {
 	}
 }
 
-static void XoaMayBayTheoSoHieu(PTRCB dscb) {
+static void XoaMayBayTheoSoHieu(PTRCB dscb, TreeHK &dshk) {
 	const string labels[] = { "So hieu may bay can xoa" };
 	const int fieldCount = 1;
 	string values[1] = { "" };
@@ -294,11 +298,10 @@ static void XoaMayBayTheoSoHieu(PTRCB dscb) {
 		dsmb.nodes[i] = dsmb.nodes[i + 1];
 	}
 	dsmb.nodes[--dsmb.n] = NULL;
-	uiShowFormScreen("XOA MAY BAY", refLines, refCount, labels, values, fieldCount, -1, "Xoa thanh cong!");
-	cout << "\n";
+	uiShowFormScreen("XOA MAY BAY", refLines, refCount, labels, values, fieldCount, -1, "Xoa thanh cong!");		SaveAll(dscb, dshk);	cout << "\n";
 }
 
-static void SuaMayBayTheoSoHieu(PTRCB dscb) {
+static void SuaMayBayTheoSoHieu(PTRCB dscb, TreeHK &dshk) {
 	const string findLabels[] = { "So hieu may bay can sua" };
 	const string editLabels[] = {
 		"So hieu may bay",
@@ -360,10 +363,11 @@ static void SuaMayBayTheoSoHieu(PTRCB dscb) {
 	strncpy(mb->LOAI, editValues[2].c_str(), 40);
 	mb->LOAI[40] = '\0';
 	uiShowFormScreen("SUA MAY BAY", refLines, refCount, editLabels, editValues, 3, -1, "Sua thanh cong!");
+	SaveAll(dscb, dshk);
 	cout << "\n";
 }
 
-void handleMayBayCLI(PTRCB &dscb) {
+void handleMayBayCLI(PTRCB &dscb, TreeHK &dshk) {
 	const string items[] = {
 		"Them may bay",
 		"Xoa may bay",
@@ -379,8 +383,8 @@ void handleMayBayCLI(PTRCB &dscb) {
 		uiResetCancel();
 		switch (m) {
 			case 0: ThemMayBay(); break;
-			case 1: XoaMayBayTheoSoHieu(dscb); break;
-			case 2: SuaMayBayTheoSoHieu(dscb); break;
+			case 1: XoaMayBayTheoSoHieu(dscb, dshk); break;
+			case 2: SuaMayBayTheoSoHieu(dscb, dshk); break;
 			case 3: HienThi(); break;
 			case 4: break;
 			default: cout << "Lua chon khong hop le\n";
@@ -466,6 +470,7 @@ void handleChuyenBayCLI(PTRCB &dscb, TreeHK &dshk) {
 			cb.DSVE.ds = NULL; cb.DSVE.soLuongVe = 0;
 			KhoiTaoVe(cb);
 			ThemChuyenBay(dscb, cb);
+			SaveAll(dscb, dshk);
 			uiShowFormScreen("LAP CHUYEN BAY MOI", mbRef, mbRefCount, labels, values, fieldCount, -1, "Them chuyen bay thanh cong!");
 			cout << "\n";
 			uiPause();
@@ -475,12 +480,14 @@ void handleChuyenBayCLI(PTRCB &dscb, TreeHK &dshk) {
 			DateTime tg;
 			if (!InputDateTimeInteractive(tg, p)) continue;
 			SuaNgayGioChuyenBay(dscb, p->cb.MACB, tg);
+			SaveAll(dscb, dshk);
 			cout << "Cap nhat thanh cong.\n";
 			uiPause();
 		} else if (m == 2) {
 			PTRCB p = ChonChuyenBayTheoSoHieu(dscb, "huy chuyen bay");
 			if (!p) { cout << "Khong tim thay!\n"; uiPause(); continue; }
 			HuyChuyenBay(dscb, p->cb.MACB);
+			SaveAll(dscb, dshk);
 			cout << "Da huy chuyen bay.\n";
 			uiPause();
 		} else if (m == 3) {
@@ -540,6 +547,8 @@ void handleDatVeCLI(PTRCB &dscb, TreeHK &dshk) {
 	}
 	if (!DatVe(dscb, p->cb.MACB, soVe, cmndBuf)) {
 		cout << "Dat ve that bai!\n";
+	} else {
+		SaveAll(dscb, dshk);
 	}
 }
 
@@ -567,7 +576,12 @@ void handleHuyVeCLI(PTRCB &dscb, TreeHK &dshk) {
 			break;
 		}
 	}
-	cout << (ok ? "Huy ve thanh cong\n" : "Khong tim thay CMND tren chuyen bay\n");
+	if (ok) {
+		SaveAll(dscb, dshk);
+		cout << "Huy ve thanh cong\n";
+	} else {
+		cout << "Khong tim thay CMND tren chuyen bay\n";
+	}
 }
 
 void handleInDanhSachCLI(PTRCB &dscb, TreeHK &dshk) {
