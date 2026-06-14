@@ -1,5 +1,6 @@
 #include "CTDL.h"
 #include <cstring>
+#include <cctype>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -97,6 +98,7 @@ void LuuChuyenBayFile(PTRCB head, ofstream &f) {
           << p->cb.TGKHOIHANH.nam << " "
           << p->cb.TGKHOIHANH.gio << " "
           << p->cb.TGKHOIHANH.phut << "|"
+          << p->cb.SANBAYDI << "|"
           << p->cb.SANBAYDEN << "|"
           << p->cb.TRANGTHAI << "|"
           << p->cb.SOHIEUMB << "|"
@@ -145,16 +147,51 @@ void DocChuyenBayFile(PTRCB &head, ifstream &f) {
         getline(iss, rest);
         if (!rest.empty() && rest[0] == '|') rest = rest.substr(1);
 
+        // Try to read SANBAYDI
         pos = rest.find('|');
         if (pos == string::npos) continue;
-        strncpy(cb.SANBAYDEN, rest.substr(0, pos).c_str(), 40);
-        cb.SANBAYDEN[40] = '\0';
-        rest = rest.substr(pos + 1);
+        string potentialSanbayDi = rest.substr(0, pos);
+        
+        // Check if this is old format (8 fields) or new format (9 fields)
+        // Old format: MACB | ngay thang nam gio phut | SANBAYDEN | TRANGTHAI | ...
+        // New format: MACB | ngay thang nam gio phut | SANBAYDI | SANBAYDEN | TRANGTHAI | ...
+        // TRANGTHAI is always 0, 1, 2, or 3, so if potentialSanbayDi is a digit, it's old format
+        
+        bool isOldFormat = false;
+        if (!potentialSanbayDi.empty() && isdigit(potentialSanbayDi[0]) && potentialSanbayDi.size() <= 2) {
+            isOldFormat = true;
+        }
+        
+        if (isOldFormat) {
+            // Old format: potentialSanbayDi is actually TRANGTHAI
+            strncpy(cb.SANBAYDI, "Chua co", 40); cb.SANBAYDI[40] = '\0';
+            cb.TRANGTHAI = atoi(potentialSanbayDi.c_str());
+            rest = rest.substr(pos + 1);
+            
+            // Read SANBAYDEN (was actually SANBAYDEN in old format)
+            pos = rest.find('|');
+            if (pos == string::npos) continue;
+            strncpy(cb.SANBAYDEN, rest.substr(0, pos).c_str(), 40);
+            cb.SANBAYDEN[40] = '\0';
+            rest = rest.substr(pos + 1);
+        } else {
+            // New format
+            strncpy(cb.SANBAYDI, potentialSanbayDi.c_str(), 40);
+            cb.SANBAYDI[40] = '\0';
+            rest = rest.substr(pos + 1);
 
-        pos = rest.find('|');
-        if (pos == string::npos) continue;
-        cb.TRANGTHAI = atoi(rest.substr(0, pos).c_str());
-        rest = rest.substr(pos + 1);
+            // Read SANBAYDEN
+            pos = rest.find('|');
+            if (pos == string::npos) continue;
+            strncpy(cb.SANBAYDEN, rest.substr(0, pos).c_str(), 40);
+            cb.SANBAYDEN[40] = '\0';
+            rest = rest.substr(pos + 1);
+
+            pos = rest.find('|');
+            if (pos == string::npos) continue;
+            cb.TRANGTHAI = atoi(rest.substr(0, pos).c_str());
+            rest = rest.substr(pos + 1);
+        }
 
         pos = rest.find('|');
         if (pos == string::npos) continue;

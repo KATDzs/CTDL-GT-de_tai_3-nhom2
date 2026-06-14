@@ -53,7 +53,7 @@ static string DongTomTatChuyenBay(PTRCB p, int stt) {
 	ostringstream oss;
 	oss << stt << ". " << p->cb.MACB
 		<< " | MB:" << p->cb.SOHIEUMB
-		<< " | " << p->cb.SANBAYDEN
+		<< " | " << p->cb.SANBAYDI << "->" << p->cb.SANBAYDEN
 		<< " | " << DinhDangNgayGio(p->cb.TGKHOIHANH)
 		<< " | trong:" << DemVeConTrong(p->cb);
 	return oss.str();
@@ -293,6 +293,14 @@ static void XoaMayBayTheoSoHieu(PTRCB dscb, TreeHK &dshk) {
 		return;
 	}
 
+	string confirm;
+	cout << "Ban chac chan muon xoa may bay " << soHieu << "? (Y/N): ";
+	if (!uiReadWord("", confirm)) return;
+	if (confirm != "Y" && confirm != "y") {
+		cout << "Da huy thao tac.\n";
+		return;
+	}
+
 	delete dsmb.nodes[index];
 	for (int i = index; i < dsmb.n - 1; i++) {
 		dsmb.nodes[i] = dsmb.nodes[i + 1];
@@ -382,7 +390,7 @@ void handleMayBayCLI(PTRCB &dscb, TreeHK &dshk) {
 		if (m == -1) break;
 		uiResetCancel();
 		switch (m) {
-			case 0: ThemMayBay(); break;
+			case 0: ThemMayBay(); SaveAll(dscb, dshk); break;
 			case 1: XoaMayBayTheoSoHieu(dscb, dshk); break;
 			case 2: SuaMayBayTheoSoHieu(dscb, dshk); break;
 			case 3: HienThi(); break;
@@ -418,17 +426,19 @@ void handleChuyenBayCLI(PTRCB &dscb, TreeHK &dshk) {
 				"Ngay (dd)",
 				"Thang (mm)",
 				"Nam (yyyy)",
+				"Noi xuat phat",
 				"Noi den",
 				"So hieu may bay"
 			};
-			const int fieldCount = 8;
-			string values[8] = {"", "", "", "", "", "", "", ""};
+			const int fieldCount = 9;
+			string values[9] = {"", "", "", "", "", "", "", "", ""};
 			string cbRef[UI_REF_MAX_LINES];
 			string mbRef[UI_REF_MAX_LINES];
 			int cbRefCount = TaoThamChieuChuyenBay(dscb, cbRef, UI_REF_MAX_LINES);
 			int mbRefCount = TaoThamChieuMayBay(mbRef, UI_REF_MAX_LINES);
 
 			ChuyenBay cb;
+			memset(&cb, 0, sizeof(ChuyenBay));
 			while (true) {
 				if (!uiFormReadWord("LAP CHUYEN BAY MOI", cbRef, cbRefCount, labels, values, fieldCount, 0)) {
 					if (uiConsumeInputCancel()) return;
@@ -448,17 +458,19 @@ void handleChuyenBayCLI(PTRCB &dscb, TreeHK &dshk) {
 			if (!uiFormReadInt("LAP CHUYEN BAY MOI", NULL, 0, labels, values, fieldCount, 4, cb.TGKHOIHANH.thang)) { if (uiConsumeInputCancel()) return; else continue; }
 			if (!uiFormReadInt("LAP CHUYEN BAY MOI", NULL, 0, labels, values, fieldCount, 5, cb.TGKHOIHANH.nam)) { if (uiConsumeInputCancel()) return; else continue; }
 			if (!uiFormReadLine("LAP CHUYEN BAY MOI", NULL, 0, labels, values, fieldCount, 6)) { if (uiConsumeInputCancel()) return; else continue; }
-			strncpy(cb.SANBAYDEN, values[6].c_str(), 40); cb.SANBAYDEN[40] = '\0';
+			strncpy(cb.SANBAYDI, values[6].c_str(), 40); cb.SANBAYDI[40] = '\0';
+			if (!uiFormReadLine("LAP CHUYEN BAY MOI", NULL, 0, labels, values, fieldCount, 7)) { if (uiConsumeInputCancel()) return; else continue; }
+			strncpy(cb.SANBAYDEN, values[7].c_str(), 40); cb.SANBAYDEN[40] = '\0';
 
 			while (true) {
-				if (!uiFormReadLine("LAP CHUYEN BAY MOI", mbRef, mbRefCount, labels, values, fieldCount, 7)) {
+				if (!uiFormReadLine("LAP CHUYEN BAY MOI", mbRef, mbRefCount, labels, values, fieldCount, 8)) {
 					if (uiConsumeInputCancel()) return;
 					continue;
 				}
-				int idx = TimMayBay(values[7]);
+				int idx = TimMayBay(values[8]);
 				if (idx == -1) {
 					cout << "Khong ton tai may bay voi so hieu tren!\n";
-					values[7].clear();
+					values[8].clear();
 					continue;
 				}
 				strncpy(cb.SOHIEUMB, dsmb.nodes[idx]->SOHIEU, 15); cb.SOHIEUMB[15] = '\0';
@@ -485,8 +497,14 @@ void handleChuyenBayCLI(PTRCB &dscb, TreeHK &dshk) {
 			uiPause();
 		} else if (m == 2) {
 			PTRCB p = ChonChuyenBayTheoSoHieu(dscb, "huy chuyen bay");
-			if (!p) { cout << "Khong tim thay!\n"; uiPause(); continue; }
-			HuyChuyenBay(dscb, p->cb.MACB);
+			if (!p) { cout << "Khong tim thay!\n"; uiPause(); continue; }		string confirm;
+		cout << "Ban chac chan muon huy chuyen bay " << p->cb.MACB << "? (Y/N): ";
+		if (!uiReadWord("", confirm)) continue;
+		if (confirm != "Y" && confirm != "y") {
+			cout << "Da huy thao tac.\n";
+			uiPause();
+			continue;
+		}			HuyChuyenBay(dscb, p->cb.MACB);
 			SaveAll(dscb, dshk);
 			cout << "Da huy chuyen bay.\n";
 			uiPause();
@@ -570,6 +588,13 @@ void handleHuyVeCLI(PTRCB &dscb, TreeHK &dshk) {
 	if (p->cb.DSVE.ds == NULL) { cout << "Chua khoi tao ve!\n"; return; }
 	for (int i = 0; i < p->cb.DSVE.soLuongVe; i++) {
 		if (strcmp(p->cb.DSVE.ds[i].SOCMND, cmndBuf) == 0) {
+			string confirm;
+			cout << "Ban chac chan muon huy ve nay? (Y/N): ";
+			if (!uiReadWord("", confirm)) return;
+			if (confirm != "Y" && confirm != "y") {
+				cout << "Da huy thao tac.\n";
+				return;
+			}
 			p->cb.DSVE.ds[i].SOCMND[0] = '\0';
 			CapNhatTrangThai(p->cb);
 			ok = true;
@@ -592,6 +617,7 @@ void handleInDanhSachCLI(PTRCB &dscb, TreeHK &dshk) {
 	int lineCount = 0;
 	lines[lineCount++] = "Chuyen bay: " + string(p->cb.MACB)
 		+ " | " + DinhDangNgayGio(p->cb.TGKHOIHANH)
+		+ " | Tu: " + string(p->cb.SANBAYDI)
 		+ " | Den: " + string(p->cb.SANBAYDEN);
 	lines[lineCount++] = "STT | SO VE | SO CMND | HO | TEN | PHAI";
 
@@ -624,10 +650,11 @@ void handleInChuyenBayTheoNgayCLI(PTRCB &dscb) {
 		"Ngay",
 		"Thang",
 		"Nam",
+		"Noi xuat phat",
 		"Noi den"
 	};
-	const int fieldCount = 4;
-	string values[4] = {"", "", "", ""};
+	const int fieldCount = 5;
+	string values[5] = {"", "", "", "", ""};
 	int ngay, thang, nam;
 
 	if (!uiFormReadInt("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 0, ngay)) return;
@@ -635,19 +662,25 @@ void handleInChuyenBayTheoNgayCLI(PTRCB &dscb) {
 	if (!uiFormReadInt("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 2, nam)) return;
 	if (!uiFormReadLine("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 3)) return;
 
+	char noiDiaBuf[41];
+	strncpy(noiDiaBuf, values[3].c_str(), 40); noiDiaBuf[40] = '\0';
+	
+	if (!uiFormReadLine("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 4)) return;
+
 	char noiDenBuf[41];
-	strncpy(noiDenBuf, values[3].c_str(), 40); noiDenBuf[40] = '\0';
+	strncpy(noiDenBuf, values[4].c_str(), 40); noiDenBuf[40] = '\0';
 
 	string lines[UI_REF_MAX_LINES];
 	int lineCount = 0;
 	lines[lineCount++] = "Tim chuyen bay ngay " + to_string(ngay) + "/"
-		+ to_string(thang) + "/" + to_string(nam) + " den " + string(noiDenBuf) + " (con ve):";
+		+ to_string(thang) + "/" + to_string(nam) + " tu " + string(noiDiaBuf) + " den " + string(noiDenBuf) + " (con ve):";
 	bool coKetQua = false;
 	int stt = 1;
 	for (PTRCB cur = dscb; cur != NULL && lineCount < UI_REF_MAX_LINES; cur = cur->next) {
 		if (!ChuyenBayHopLe(cur)) continue;
 		int veTrong = DemVeConTrong(cur->cb);
 		if (TrungNgay(cur->cb.TGKHOIHANH, ngay, thang, nam)
+			&& strcmp(cur->cb.SANBAYDI, noiDiaBuf) == 0
 			&& strcmp(cur->cb.SANBAYDEN, noiDenBuf) == 0 && veTrong > 0) {
 			lines[lineCount++] = "  " + DongTomTatChuyenBay(cur, stt++);
 			coKetQua = true;

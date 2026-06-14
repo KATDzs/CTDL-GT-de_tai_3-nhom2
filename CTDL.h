@@ -41,7 +41,8 @@ struct DateTime {
 struct ChuyenBay {
     char MACB[16];           // C15
     DateTime TGKHOIHANH;
-    char SANBAYDEN[41];
+    char SANBAYDI[41];       // Nơi xuất phát
+    char SANBAYDEN[41];      // Nơi đến
     int TRANGTHAI = 1;           // 0:hủy, 1:còn vé, 2:hết vé, 3:hoàn tất
     char SOHIEUMB[16];
     int SOCHO;               // liên kết máy bay
