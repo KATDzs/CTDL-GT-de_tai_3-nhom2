@@ -437,18 +437,39 @@ void uiRunApp(PTRCB &dscb, TreeHK &dshk) {
         if (choice == -1 || choice == 8) break;
 
         switch (choice) {
-            case 0: handleMayBayCLI(dscb, dshk); break;
-            case 1: handleChuyenBayCLI(dscb, dshk); break;
-            case 2: handleDatVeCLI(dscb, dshk); break;
-            case 3: handleHuyVeCLI(dscb, dshk); break;
-            case 4: handleInDanhSachCLI(dscb, dshk); break;
-            case 5: handleInChuyenBayTheoNgayCLI(dscb); break;
-            case 6: handleInVeConTrongCLI(dscb); break;
-            case 7: handleThongKeCLI(dscb); break;
-            default: break;
+            case 0: 
+                handleMayBayCLI(dscb, dshk); 
+                break;
+            case 1: 
+                handleChuyenBayCLI(dscb, dshk); 
+                break;
+            case 2: 
+                handleDatVeCLI(dscb, dshk); 
+                uiPause();
+                break;
+            case 3: 
+                handleHuyVeCLI(dscb, dshk); 
+                uiPause();
+                break;
+            case 4: 
+                handleInDanhSachCLI(dscb, dshk); 
+                uiPause();
+                break;
+            case 5: 
+                handleInChuyenBayTheoNgayCLI(dscb); 
+                uiPause();
+                break;
+            case 6: 
+                handleInVeConTrongCLI(dscb); 
+                uiPause();
+                break;
+            case 7: 
+                handleThongKeCLI(dscb); 
+                uiPause();
+                break;
+            default: 
+                break;
         }
-
-        
     }
 }
 
