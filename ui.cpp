@@ -95,14 +95,15 @@ static void uiFlushInput() {
 }
 
 static bool uiReadChars(const string& prompt, string& out, bool allowSpaces) {
-    cout << prompt << " (Esc/q: huy) ";
+    cout << prompt << " (Esc: huy) ";
     out.clear();
+    uiFlushInput();
 
     while (true) {
         int c = uiGetch();
         if (c == -1) continue;
 
-        if (c == 27 || ((c == 'q' || c == 'Q') && out.empty())) {
+        if (c == 27) {
             cout << "\n";
             uiCancelInput();
             return false;
