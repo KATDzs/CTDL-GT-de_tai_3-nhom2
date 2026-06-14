@@ -39,14 +39,15 @@ void InVeConTrong(PTRCB head, char maCB[]) {
     }
 }
 void CapNhatTrangThai(ChuyenBay &cb) {
+    // ✅ Nếu hủy rồi thì không cập nhật lại (giữ nguyên 0)
+    if (cb.TRANGTHAI == 0) return;
+    
     int veTrong = DemVeConTrong(cb);
-
-    if (cb.TRANGTHAI == 0) return; // đã hủy thì giữ nguyên
-
-    if (veTrong == 0)
-        cb.TRANGTHAI = 2; // hết vé
-    else
-        cb.TRANGTHAI = 1; // còn vé
+    
+    // ✅ Cập nhật logic đúng:
+    // Nếu hết vé -> trạng thái 2
+    // Nếu còn vé -> trạng thái 1
+    cb.TRANGTHAI = (veTrong == 0) ? 2 : 1;
 }
 bool DatVe(PTRCB head, char maCB[], int soVe, char cmnd[]) {
     PTRCB p = TimChuyenBay(head, maCB);

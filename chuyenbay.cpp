@@ -71,9 +71,9 @@ void HuyChuyenBay(PTRCB head, char maCB[]) {
     }
 
     if (p->cb.DSVE.ds != NULL) {
-        for (int i = 0; i < p->cb.DSVE.soLuongVe; i++) {
-            p->cb.DSVE.ds[i].SOCMND[0] = '\0';
-        }
+        delete[] p->cb.DSVE.ds;  // ✅ GIẢI PHÓNG VÉ
+        p->cb.DSVE.ds = NULL;
+        p->cb.DSVE.soLuongVe = 0;
     }
 
     p->cb.TRANGTHAI = 0;
@@ -228,4 +228,49 @@ void DocChuyenBayFile(PTRCB &head, ifstream &f) {
 
         ThemCuoiCB(head, cb);
     }
+}
+
+// ✅ THÊM HÀM CLEANUP
+void XoaChuyenBayToanBo(PTRCB &head) {
+    while (head != NULL) {
+        PTRCB temp = head;
+        head = head->next;
+        
+        // Giải phóng DSVE nếu tồn tại
+        if (temp->cb.DSVE.ds != NULL) {
+            delete[] temp->cb.DSVE.ds;
+            temp->cb.DSVE.ds = NULL;
+        }
+        
+        // Xóa node chuyến bay
+        delete temp;
+    }
+    head = NULL;
+}
+
+// ✅ THÊM HÀM KIỂM TRA & XÁC NHẬN HOÀN TẤT
+bool KiemTraChuyenBayDaKhoiHanh(DateTime tgKhoiHanh) {
+    // Lấy thời gian hiện tại từ hệ thống
+    // Nếu ngày/giờ hiện tại >= ngày/giờ khởi hành => đã bay
+    // (Simplify: chỉ kiểm tra ngày - không có hệ thống thời gian thực)
+    // Có thể để người dùng manual confirm hoặc hardcode test date
+    
+    // Tạm thời: return false (manual mode)
+    return false;
+}
+
+void XacNhanChuyenBayHoanTat(PTRCB head, char maCB[]) {
+    PTRCB p = TimChuyenBay(head, maCB);
+    if (p == NULL) {
+        cout << "Khong tim thay chuyen bay!\n";
+        return;
+    }
+    
+    if (p->cb.TRANGTHAI == 0) {
+        cout << "Chuyen bay da bi huy, khong the xac nhan!\n";
+        return;
+    }
+    
+    p->cb.TRANGTHAI = 3;  // ✅ SET HOÀN TẤT
+    cout << "Da xac nhan chuyen bay " << maCB << " da hoan tat.\n";
 }

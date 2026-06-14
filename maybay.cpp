@@ -19,7 +19,7 @@ void XoaMayBay()
         return;
     }
 
-    // If node exists, delete it and (optionally) clear the pointer before shifting
+    // ✅ ĐÃ AN TOÀN: kiểm tra nullptr
     if (dsmb.nodes[index] != nullptr) {
         delete dsmb.nodes[index];
         dsmb.nodes[index] = nullptr;
