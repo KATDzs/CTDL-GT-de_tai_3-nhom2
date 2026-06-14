@@ -59,3 +59,14 @@ void DocHanhKhachFile(TreeHK &root, ifstream &f) {
         ThemHanhKhach(root, hk);
     }
 }
+
+// ✅ THÊM HÀM CLEANUP
+void XoaHanhKhachToanBo(TreeHK &root) {
+    if (root == NULL) return;
+    
+    // Duyệt postorder: left -> right -> root
+    XoaHanhKhachToanBo(root->left);
+    XoaHanhKhachToanBo(root->right);
+    delete root;
+    root = NULL;
+}

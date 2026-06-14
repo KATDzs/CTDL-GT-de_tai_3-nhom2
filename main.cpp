@@ -410,6 +410,7 @@ void handleChuyenBayCLI(PTRCB &dscb, TreeHK &dshk) {
 		"Lap chuyen bay moi",
 		"Sua ngay gio chuyen bay",
 		"Huy chuyen bay",
+		"Xac nhan chuyen bay da hoan tat",  // ✅ THÊM
 		"Quay lai"
 	};
 	const int itemCount = sizeof(items) / sizeof(items[0]);
@@ -508,10 +509,27 @@ void handleChuyenBayCLI(PTRCB &dscb, TreeHK &dshk) {
 			SaveAll(dscb, dshk);
 			cout << "Da huy chuyen bay.\n";
 			uiPause();
-		} else if (m == 3) {
+		} else if (m == 3) {  // ✅ THÊM CASE MỚI
+			PTRCB p = ChonChuyenBayTheoSoHieu(dscb, "xac nhan hoan tat");
+			if (!p) { cout << "Khong tim thay!\n"; uiPause(); continue; }
+			
+			string confirm;
+			cout << "Xac nhan chuyen bay " << p->cb.MACB << " da hoan tat? (Y/N): ";
+			if (!uiReadWord("", confirm)) continue;
+			if (confirm != "Y" && confirm != "y") {
+				cout << "Da huy thao tac.\n";
+				uiPause();
+				continue;
+			}
+			
+			XacNhanChuyenBayHoanTat(dscb, p->cb.MACB);
+			SaveAll(dscb, dshk);
+			cout << "Da cap nhat.\n";
+			uiPause();
+		} else if (m == 4) {
 			break;
 		}
-	} while (m != 3 && m != -1);
+	} while (m != 4 && m != -1);
 }
 
 void handleDatVeCLI(PTRCB &dscb, TreeHK &dshk) {
@@ -734,7 +752,8 @@ void SaveAll(PTRCB head, TreeHK root) {
     if (fm.is_open()) {
         LuuMayBayFile(dsmb, fm);
         fm.close();
-        cout << "Da luu maybay.txt\n";
+        // ✅ COMMENT OUT LOG SPAM
+        // cout << "Da luu maybay.txt\n";
     } else {
         cerr << "Khong the mo maybay.txt de ghi\n";
     }
@@ -744,7 +763,8 @@ void SaveAll(PTRCB head, TreeHK root) {
     if (fc.is_open()) {
         LuuChuyenBayFile(head, fc);
         fc.close();
-        cout << "Da luu chuyenbay.txt\n";
+        // ✅ COMMENT OUT LOG SPAM
+        // cout << "Da luu chuyenbay.txt\n";
     } else {
         cerr << "Khong the mo chuyenbay.txt de ghi\n";
     }
@@ -754,7 +774,8 @@ void SaveAll(PTRCB head, TreeHK root) {
     if (fh.is_open()) {
         LuuHanhKhachFile(root, fh);
         fh.close();
-        cout << "Da luu hanhkhach.txt\n";
+        // ✅ COMMENT OUT LOG SPAM
+        // cout << "Da luu hanhkhach.txt\n";
     } else {
         cerr << "Khong the mo hanhkhach.txt de ghi\n";
     }
@@ -800,6 +821,12 @@ int main() {
     cout << "\n";
 
     SaveAll(dscb, dshk);
+    
+    // ✅ CLEANUP - GIẢI PHÓNG TẤT CẢ BỘNHỚ ĐỘNG
+    XoaChuyenBayToanBo(dscb);
+    XoaHanhKhachToanBo(dshk);
+    XoaToanBo();  // Giải phóng dsmb
+    
     cout << "Tam biet!\n";
 
     return 0;

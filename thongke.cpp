@@ -10,11 +10,12 @@ void ThongKeSoLuotBay(PTRCB head, DSMayBay dsMB, TK kq[]) {
     }
     PTRCB current = head;
     while (current != NULL) {
+        // ✅ ĐỊA LUẬT: Chỉ đếm chuyến có TRANGTHAI == 3 (hoàn tất)
         if (current->cb.TRANGTHAI == 3) {
             for (int i = 0; i < dsMB.n; i++) {
                 if (strcmp(current->cb.SOHIEUMB, dsMB.nodes[i]->SOHIEU) == 0) {
                     kq[i].soLuot++;
-                    break;  // Tối ưu: Dừng sớm khi tìm thấy
+                    break;
                 }
             }
         }

@@ -96,3 +96,11 @@ nodeHK* TimHanhKhach(TreeHK root, const char* cmnd);
 // Thêm khai báo biến DSMayBay toàn cục
 extern DSMayBay dsmb;
 
+// ✅ THÊM CLEANUP FUNCTIONS
+void XoaChuyenBayToanBo(PTRCB &head);
+void XoaHanhKhachToanBo(TreeHK &root);
+
+// ✅ THÊM KHAI BÁO
+void XacNhanChuyenBayHoanTat(PTRCB head, char maCB[]);
+bool KiemTraChuyenBayDaKhoiHanh(DateTime tgKhoiHanh);
+
