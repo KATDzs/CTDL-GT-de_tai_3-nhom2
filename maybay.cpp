@@ -45,39 +45,13 @@ void SuaMayBay()
     }
 
     MayBay* mb = dsmb.nodes[index];
-
-    while (true)
-    {
-        if (!uiReadWord("Sua so hieu (toi da 15 ky tu):", soHieu)) return;
-
-        if (soHieu.length() == 0)
-        {
-            cout << "Loi: So hieu khong duoc rong!\n";
-            continue;
-        }
-
-        if (soHieu.length() > 15)
-        {
-            cout << "Loi: So hieu khong duoc qua 15 ky tu!\n";
-            continue;
-        }
-
-        if (KiemTraTrungSoHieu(soHieu) && soHieu != string(mb->SOHIEU))
-        {
-            cout << "Loi: So hieu bi trung!\n";
-            continue;
-        }
-
-        break;
-    }
-
-    strcpy(mb->SOHIEU, soHieu.c_str());
     
-        int soGhe;
+    int soGhe;
 
     while (true)
     {
         if (!uiReadInt("Sua so ghe (" + to_string(MIN_SO_GHE) + " - " + to_string(MAX_SO_GHE) + "):", soGhe)) return;
+        if (soGhe < MIN_SO_GHE)
         {
             cout << "Loi: So ghe phai lon hon hoac bang " << MIN_SO_GHE << "!\n";
             continue;
@@ -111,90 +85,91 @@ void SuaMayBay()
 
 void ThemMayBay()
     {
-
         if (dsmb.n >= MAX_MB) {
             cout << "Danh sach may bay day!\n";
             return;
         }
-        cout << "Con " << (MAX_MB - dsmb.n) << " cho trong.\n";
-        MayBay* mb = new MayBay;
 
-        string soHieu;
-
-        while (true)
-        {
-            if (!uiReadWord("Nhap so hieu (toi da 15 ky tu):", soHieu)) {
-                delete mb;
-                return;
+        const string labels[] = {
+            "So hieu (toi da 15 ky tu)",
+            "So ghe (" + to_string(MIN_SO_GHE) + " - " + to_string(MAX_SO_GHE) + ")",
+            "Loai may bay (toi da 40 ky tu)"
+        };
+        const int fieldCount = 3;
+        string values[3] = {"", "", ""};
+        string refLines[UI_REF_MAX_LINES];
+        int refCount = 0;
+        if (dsmb.n > 0) {
+            refLines[refCount++] = "So hieu da co trong maybay.txt (tranh trung):";
+            for (int i = 0; i < dsmb.n && refCount < UI_REF_MAX_LINES; i++) {
+                refLines[refCount++] = "  " + string(dsmb.nodes[i]->SOHIEU)
+                    + " | " + string(dsmb.nodes[i]->LOAI)
+                    + " | " + to_string(dsmb.nodes[i]->SOCHO) + " cho";
             }
+        } else {
+            refLines[refCount++] = "(Chua co may bay nao trong maybay.txt)";
+        }
 
-            if (soHieu.length() == 0)
-            {
+        uiShowTaskScreen("THEM MAY BAY", "Con " + to_string(MAX_MB - dsmb.n) + " cho trong");
+
+        while (true) {
+            if (!uiFormReadWord("THEM MAY BAY", refLines, refCount, labels, values, fieldCount, 0)) return;
+
+            if (values[0].empty()) {
                 cout << "Loi: So hieu khong duoc rong!\n";
+                values[0].clear();
                 continue;
             }
-
-            if (soHieu.length() > 15)
-            {
+            if (values[0].length() > 15) {
                 cout << "Loi: So hieu khong duoc qua 15 ky tu!\n";
+                values[0].clear();
                 continue;
             }
-
-            if (KiemTraTrungSoHieu(soHieu))
-            {
+            if (KiemTraTrungSoHieu(values[0])) {
                 cout << "Loi: So hieu bi trung!\n";
+                values[0].clear();
                 continue;
             }
-
             break;
         }
 
-        strcpy(mb->SOHIEU, soHieu.c_str());
-    
         int soGhe;
+        while (true) {
+            if (!uiFormReadInt("THEM MAY BAY", refLines, refCount, labels, values, fieldCount, 1, soGhe)) return;
 
-while (true)
-{
-    if (!uiReadInt("Nhap so ghe (" + to_string(MIN_SO_GHE) + " - " + to_string(MAX_SO_GHE) + "):", soGhe)) {
-        delete mb;
-        return;
-    }
+            if (soGhe < MIN_SO_GHE) {
+                cout << "Loi: So ghe phai lon hon hoac bang " << MIN_SO_GHE << "!\n";
+                values[1].clear();
+                continue;
+            }
+            if (soGhe > MAX_SO_GHE) {
+                cout << "Loi: So ghe khong duoc vuot qua " << MAX_SO_GHE << "!\n";
+                values[1].clear();
+                continue;
+            }
+            break;
+        }
 
-    if (soGhe < MIN_SO_GHE)
-    {
-        cout << "Loi: So ghe phai lon hon hoac bang " << MIN_SO_GHE << "!\n";
-        continue;
-    }
+        while (true) {
+            if (!uiFormReadLine("THEM MAY BAY", refLines, refCount, labels, values, fieldCount, 2)) return;
 
-    if (soGhe > MAX_SO_GHE)
-    {
-        cout << "Loi: So ghe khong duoc vuot qua " << MAX_SO_GHE << "!\n";
-        continue;
-    }
+            if (values[2].length() > 40) {
+                cout << "Loi: Loai may bay khong duoc qua 40 ky tu!\n";
+                values[2].clear();
+                continue;
+            }
+            break;
+        }
 
-    break;
-}
-
+        MayBay* mb = new MayBay;
+        strcpy(mb->SOHIEU, values[0].c_str());
         mb->SOCHO = soGhe;
-
-        string loai;
-        if (!uiReadLine("Nhap loai may bay (toi da 40 ky tu):", loai)) {
-            delete mb;
-            return;
-        }
-
-        if (loai.length() > 40)
-        {
-            cout << "Loi: Loai may bay khong duoc qua 40 ky tu!\n";
-            delete mb;
-            return;
-        }
-
-        strncpy(mb->LOAI, loai.c_str(), 40);
+        strncpy(mb->LOAI, values[2].c_str(), 40);
         mb->LOAI[40] = '\0';
 
         dsmb.nodes[dsmb.n++] = mb;
-        cout << "Them may bay thanh cong!\n";
+        uiShowFormScreen("THEM MAY BAY", refLines, refCount, labels, values, fieldCount, -1, "Them may bay thanh cong!");
+        cout << "\n";
     }
 
 void LuuMayBayFile(DSMayBay dsmb_local, ofstream &f) {

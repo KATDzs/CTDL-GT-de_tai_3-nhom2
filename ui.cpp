@@ -13,7 +13,6 @@
 using namespace std;
 
 static bool uiInputCancelled = false;
-
 void uiResetCancel() {
     uiInputCancelled = false;
 }
@@ -47,6 +46,10 @@ static void uiEnableRaw() {
     tcgetattr(STDIN_FILENO, &ui_orig_termios);
     struct termios raw = ui_orig_termios;
     raw.c_lflag &= ~(ECHO | ICANON);
+    // Make reads return immediately or after a short timeout so that
+    // pressing Esc alone doesn't block waiting for additional bytes.
+    raw.c_cc[VMIN] = 0;
+    raw.c_cc[VTIME] = 1; // tenths of a second
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
     ui_raw = true;
 }
@@ -77,11 +80,19 @@ static int uiGetch() {
 
 static void uiCancelInput() {
     uiInputCancelled = true;
-    cout << "\nDa huy thao tac.\n";
+    cout << "Da huy thao tac.\n";
+}
+
+static void uiFlushInput() {
+#ifdef _WIN32
+    while (_kbhit()) (void)_getch();
+#else
+    tcflush(STDIN_FILENO, TCIFLUSH);
+#endif
 }
 
 static bool uiReadChars(const string& prompt, string& out, bool allowSpaces) {
-    cout << prompt << " (Esc/q: huy) ";
+    cout << prompt << " ";
     out.clear();
 
     while (true) {
@@ -89,6 +100,7 @@ static bool uiReadChars(const string& prompt, string& out, bool allowSpaces) {
         if (c == -1) continue;
 
         if (c == 27 || ((c == 'q' || c == 'Q') && out.empty())) {
+            cout << "\n";
             uiCancelInput();
             return false;
         }
@@ -153,13 +165,8 @@ static string uiPadRight(const string& s, int width) {
     return s + string(width - (int)s.length(), ' ');
 }
 
-static int uiCalcBoxWidth(const vector<string>& lines, int minWidth = 70) {
-    int w = minWidth;
-    for (const auto& line : lines) {
-        int need = (int)line.length() + 4;
-        if (need > w) w = need;
-    }
-    return w;
+static int uiCalcBoxWidth(const string lines[], int lineCount, int minWidth = UI_DEFAULT_BOX_WIDTH) {
+    return UI_DEFAULT_BOX_WIDTH;
 }
 
 void uiClear() {
@@ -182,58 +189,177 @@ void uiDrawBoxBottom(int width) {
 
 void uiDrawBoxLine(const string& text, int width) {
     int maxLen = width - 4;
-    if ((int)text.length() <= maxLen) {
-        cout << "| " << uiPadRight(text, maxLen) << " |\n";
-        return;
+    string display = text;
+    if ((int)display.length() > maxLen) {
+        if (maxLen > 3) display = display.substr(0, (size_t)maxLen - 3) + "...";
+        else display = display.substr(0, (size_t)maxLen);
     }
-    for (size_t i = 0; i < text.length(); i += (size_t)maxLen) {
-        string part = text.substr(i, (size_t)maxLen);
-        cout << "| " << uiPadRight(part, maxLen) << " |\n";
-    }
+    cout << "| " << uiPadRight(display, maxLen) << " |\n";
 }
 
 void uiDrawBoxSeparator(int width) {
     cout << "+" << string(width - 2, '-') << "+\n";
 }
 
-static void uiDrawBoxLines(const vector<string>& lines, int width) {
-    for (const auto& line : lines)
-        uiDrawBoxLine(line, width);
+void uiShowTaskScreen(const string& title, const string& subtitle) {
+    uiClear();
+    uiDrawBoxTop(title);
+    if (!subtitle.empty()) {
+        uiDrawBoxLine(subtitle);
+    }
+    uiDrawBoxBottom();
+    cout << "\n";
+}
+
+void uiShowDataBox(const string& title, const string lines[], int lineCount) {
+    if (lines == NULL || lineCount <= 0) return;
+
+    const int width = UI_DEFAULT_BOX_WIDTH;
+    uiClear();
+    uiDrawBoxTop(title, width);
+    int showCount = lineCount;
+    if (showCount > UI_REF_DISPLAY_MAX + 2) showCount = UI_REF_DISPLAY_MAX + 2;
+    for (int i = 0; i < showCount; i++) {
+        uiDrawBoxLine(lines[i], width);
+    }
+    if (lineCount > showCount) {
+        uiDrawBoxLine("  ... va " + to_string(lineCount - showCount) + " dong khac", width);
+    }
+    uiDrawBoxBottom(width);
+    cout << "\n";
+}
+
+static string uiFormFieldLine(const string& label, const string& value, bool active) {
+    string line = active ? "> " : "  ";
+    line += label + ": ";
+    if (!value.empty()) {
+        line += value;
+    } else if (active) {
+        line += "_";
+    }
+    return line;
+}
+
+void uiShowFormScreen(const string& title, const string refLines[], int refCount, const string labels[], const string values[], int fieldCount, int activeIndex, const string& footer) {
+    if (labels == NULL || values == NULL || fieldCount <= 0) return;
+    if (fieldCount > UI_FORM_MAX_FIELDS) fieldCount = UI_FORM_MAX_FIELDS;
+    if (refCount > UI_REF_MAX_LINES) refCount = UI_REF_MAX_LINES;
+
+    const int width = UI_DEFAULT_BOX_WIDTH;
+    uiClear();
+    uiDrawBoxTop(title, width);
+
+    if (refLines != NULL && refCount > 0) {
+        int showCount = refCount;
+        if (showCount > UI_REF_DISPLAY_MAX) showCount = UI_REF_DISPLAY_MAX;
+        for (int i = 0; i < showCount; i++) {
+            uiDrawBoxLine(refLines[i], width);
+        }
+        if (refCount > UI_REF_DISPLAY_MAX) {
+            uiDrawBoxLine("  ... va " + to_string(refCount - UI_REF_DISPLAY_MAX) + " dong tham khao khac", width);
+        }
+        uiDrawBoxSeparator(width);
+    }
+
+    for (int i = 0; i < fieldCount; i++) {
+        uiDrawBoxLine(uiFormFieldLine(labels[i], values[i], i == activeIndex), width);
+    }
+
+    if (!footer.empty()) {
+        uiDrawBoxSeparator(width);
+        uiDrawBoxLine(footer, width);
+    }
+    uiDrawBoxBottom(width);
+    cout << "\n";
+}
+
+bool uiFormReadWord(const string& title, const string refLines[], int refCount, const string labels[], string values[], int fieldCount, int fieldIndex) {
+    uiShowFormScreen(title, refLines, refCount, labels, values, fieldCount, fieldIndex);
+    string prompt = "> " + labels[fieldIndex];
+    if (!uiReadWord(prompt, values[fieldIndex])) return false;
+    return true;
+}
+
+bool uiFormReadLine(const string& title, const string refLines[], int refCount, const string labels[], string values[], int fieldCount, int fieldIndex) {
+    uiShowFormScreen(title, refLines, refCount, labels, values, fieldCount, fieldIndex);
+    string prompt = "> " + labels[fieldIndex];
+    if (!uiReadLine(prompt, values[fieldIndex])) return false;
+    return true;
+}
+
+bool uiFormReadInt(const string& title, const string refLines[], int refCount, const string labels[], string values[], int fieldCount, int fieldIndex, int& out) {
+    while (true) {
+        if (!uiFormReadWord(title, refLines, refCount, labels, values, fieldCount, fieldIndex)) return false;
+
+        const string& s = values[fieldIndex];
+        if (s.empty()) {
+            cout << "Loi: Vui long nhap so!\n";
+            values[fieldIndex].clear();
+            continue;
+        }
+
+        bool ok = true;
+        for (char c : s) {
+            if (!isdigit((unsigned char)c)) { ok = false; break; }
+        }
+        if (!ok) {
+            cout << "Loi: Vui long nhap so!\n";
+            values[fieldIndex].clear();
+            continue;
+        }
+
+        out = stoi(s);
+        return true;
+    }
+}
+
+static void uiDrawBoxLines(const string lines[], int lineCount, int width) {
+    for (int i = 0; i < lineCount; i++)
+        uiDrawBoxLine(lines[i], width);
 }
 
 void uiPause(const string& msg) {
 #ifndef _WIN32
     uiDisableRaw();
 #endif
-    cout << "\n" << msg;
-    cin.clear();
-    cin.ignore(10000, '\n');
-    cin.get();
+    cout << "\n" << (msg.empty() ? "Nhan Enter de tiep tuc..." : msg);
+    uiFlushInput();
+    while (true) {
+        int c = uiGetch();
+        if (c == '\r' || c == '\n') break;
+    }
 }
 
 // --- menu ---
-int uiMenu(const string& title, const vector<string>& items, const string& footer) {
-    if (items.empty()) return -1;
+int uiMenu(const string& title, const string items[], int itemCount, const string& footer) {
+    if (items == NULL || itemCount <= 0) return -1;
 
     int highlight = 0;
-    const vector<string> hints = footer.empty()
-        ? vector<string>{
-              "Mui ten: chon | Enter: xac nhan | So 1-9: chon nhanh",
-              "q / Esc: thoat"
-          }
-        : vector<string>{footer};
+    string hints[2];
+    int hintCount;
+    if (footer.empty()) {
+        hints[0] = "Mui ten: chon | Enter: xac nhan | So 1-9: chon nhanh";
+        hints[1] = "q / Esc: thoat";
+        hintCount = 2;
+    } else {
+        hints[0] = footer;
+        hintCount = 1;
+    }
 
-    vector<string> measure;
-    for (int i = 0; i < (int)items.size(); i++)
-        measure.push_back("> " + to_string(i + 1) + ". " + items[i]);
-    for (const auto& h : hints) measure.push_back(h);
-    const int width = uiCalcBoxWidth(measure);
+    string* measure = new string[itemCount + hintCount];
+    for (int i = 0; i < itemCount; i++)
+        measure[i] = "> " + to_string(i + 1) + ". " + items[i];
+    for (int i = 0; i < hintCount; i++)
+        measure[itemCount + i] = hints[i];
+    const int width = uiCalcBoxWidth(measure, itemCount + hintCount);
+    delete[] measure;
 
     while (true) {
+        uiFlushInput();
         uiClear();
         uiDrawBoxTop(title, width);
 
-        for (int i = 0; i < (int)items.size(); i++) {
+        for (int i = 0; i < itemCount; i++) {
             string line = (i == highlight)
                 ? "> " + to_string(i + 1) + ". " + items[i]
                 : "  " + to_string(i + 1) + ". " + items[i];
@@ -241,7 +367,7 @@ int uiMenu(const string& title, const vector<string>& items, const string& foote
         }
 
         uiDrawBoxSeparator(width);
-        uiDrawBoxLines(hints, width);
+        uiDrawBoxLines(hints, hintCount, width);
         uiDrawBoxBottom(width);
 
         int ch = uiGetch();
@@ -249,7 +375,7 @@ int uiMenu(const string& title, const vector<string>& items, const string& foote
         if (ch == 1000) {
             if (highlight > 0) highlight--;
         } else if (ch == 1001) {
-            if (highlight < (int)items.size() - 1) highlight++;
+            if (highlight < itemCount - 1) highlight++;
         } else if (ch == '\r' || ch == '\n') {
 #ifndef _WIN32
             uiDisableRaw();
@@ -262,7 +388,7 @@ int uiMenu(const string& title, const vector<string>& items, const string& foote
             return -1;
         } else if (ch >= '1' && ch <= '9') {
             int idx = ch - '1';
-            if (idx < (int)items.size()) {
+            if (idx < itemCount) {
 #ifndef _WIN32
                 uiDisableRaw();
 #endif
@@ -273,17 +399,17 @@ int uiMenu(const string& title, const vector<string>& items, const string& foote
 }
 
 // --- handlers ---
-extern void handleMayBayCLI();
+extern void handleMayBayCLI(PTRCB &dscb);
 extern void handleChuyenBayCLI(PTRCB &dscb, TreeHK &dshk);
 extern void handleDatVeCLI(PTRCB &dscb, TreeHK &dshk);
-extern void handleHuyVeCLI(PTRCB &dscb);
+extern void handleHuyVeCLI(PTRCB &dscb, TreeHK &dshk);
 extern void handleInDanhSachCLI(PTRCB &dscb, TreeHK &dshk);
 extern void handleInChuyenBayTheoNgayCLI(PTRCB &dscb);
 extern void handleInVeConTrongCLI(PTRCB &dscb);
 extern void handleThongKeCLI(PTRCB &dscb);
 
 void uiRunApp(PTRCB &dscb, TreeHK &dshk) {
-    const vector<string> mainItems = {
+    const string mainItems[] = {
         "Quan ly May Bay (Them / Xoa / Sua / Hien thi)",
         "Quan ly Chuyen Bay (Lap moi / Sua ngay gio / Huy)",
         "Dat ve",
@@ -294,25 +420,19 @@ void uiRunApp(PTRCB &dscb, TreeHK &dshk) {
         "Thong ke so luot bay cua may bay (giam dan)",
         "Thoat"
     };
+    const int mainItemCount = sizeof(mainItems) / sizeof(mainItems[0]);
 
     uiResetCancel();
 
     while (true) {
-        int choice = uiMenu("HE THONG QUAN LY MAY BAY", mainItems);
+        int choice = uiMenu("HE THONG QUAN LY MAY BAY", mainItems, mainItemCount);
         if (choice == -1 || choice == 8) break;
 
-        uiClear();
-        const int width = uiCalcBoxWidth({mainItems[choice]});
-        uiDrawBoxTop("DANG THUC HIEN", width);
-        uiDrawBoxLine(mainItems[choice], width);
-        uiDrawBoxBottom(width);
-        cout << "\n";
-
         switch (choice) {
-            case 0: handleMayBayCLI(); break;
+            case 0: handleMayBayCLI(dscb); break;
             case 1: handleChuyenBayCLI(dscb, dshk); break;
             case 2: handleDatVeCLI(dscb, dshk); break;
-            case 3: handleHuyVeCLI(dscb); break;
+            case 3: handleHuyVeCLI(dscb, dshk); break;
             case 4: handleInDanhSachCLI(dscb, dshk); break;
             case 5: handleInChuyenBayTheoNgayCLI(dscb); break;
             case 6: handleInVeConTrongCLI(dscb); break;
@@ -321,6 +441,8 @@ void uiRunApp(PTRCB &dscb, TreeHK &dshk) {
         }
 
         if (uiConsumeInputCancel()) continue;
-        uiPause();
+        if (choice != 0 && choice != 1) {
+            uiPause();
+        }
     }
 }

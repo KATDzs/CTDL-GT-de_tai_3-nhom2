@@ -1,4 +1,6 @@
-3
+5
 aaaaaaaa|bv|30
 a1|b1|40
 b2|b1|40
+abc2|a1|30
+acb|aaa|40

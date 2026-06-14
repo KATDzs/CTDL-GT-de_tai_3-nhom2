@@ -2,6 +2,7 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 using namespace std;
 
 PTRCB TaoNodeChuyenBay(ChuyenBay cb) {
@@ -69,11 +70,12 @@ void HuyChuyenBay(PTRCB head, char maCB[]) {
     }
 
     if (p->cb.DSVE.ds != NULL) {
-        delete[] p->cb.DSVE.ds;
-        p->cb.DSVE.ds = NULL;
+        for (int i = 0; i < p->cb.DSVE.soLuongVe; i++) {
+            p->cb.DSVE.ds[i].SOCMND[0] = '\0';
+        }
     }
 
-    p->cb.DSVE.soLuongVe = 0;
+    p->cb.TRANGTHAI = 0;
 }
 
 void SuaNgayGioChuyenBay(PTRCB head, char maCB[], DateTime tgMoi) {
@@ -120,37 +122,67 @@ void LuuChuyenBayFile(PTRCB head, ofstream &f) {
 }
 
 void DocChuyenBayFile(PTRCB &head, ifstream &f) {
-    while (!f.eof()) {
+    string line;
+    while (getline(f, line)) {
+        if (line.empty()) continue;
+
         ChuyenBay cb;
+        size_t pos = 0;
+        string token;
 
-        f.getline(cb.MACB, 16, '|');
+        pos = line.find('|');
+        if (pos == string::npos) continue;
+        strncpy(cb.MACB, line.substr(0, pos).c_str(), 15);
+        cb.MACB[15] = '\0';
+        if (cb.MACB[0] == '\0') continue;
 
-        if (strlen(cb.MACB) == 0) break;
+        line = line.substr(pos + 1);
+        istringstream iss(line);
+        if (!(iss >> cb.TGKHOIHANH.ngay >> cb.TGKHOIHANH.thang >> cb.TGKHOIHANH.nam
+                  >> cb.TGKHOIHANH.gio >> cb.TGKHOIHANH.phut)) continue;
 
-        f >> cb.TGKHOIHANH.ngay
-          >> cb.TGKHOIHANH.thang
-          >> cb.TGKHOIHANH.nam
-          >> cb.TGKHOIHANH.gio
-          >> cb.TGKHOIHANH.phut;
-        f.ignore(); // skip delimiter '|'
+        string rest;
+        getline(iss, rest);
+        if (!rest.empty() && rest[0] == '|') rest = rest.substr(1);
 
-        f.getline(cb.SANBAYDEN, 41, '|');
-        f >> cb.TRANGTHAI;
-        f.ignore();
+        pos = rest.find('|');
+        if (pos == string::npos) continue;
+        strncpy(cb.SANBAYDEN, rest.substr(0, pos).c_str(), 40);
+        cb.SANBAYDEN[40] = '\0';
+        rest = rest.substr(pos + 1);
 
-        f.getline(cb.SOHIEUMB, 16, '|');
-        f >> cb.SOCHO;
-        f.ignore(); // skip the '|' before ticket tokens
+        pos = rest.find('|');
+        if (pos == string::npos) continue;
+        cb.TRANGTHAI = atoi(rest.substr(0, pos).c_str());
+        rest = rest.substr(pos + 1);
 
-        // allocate DSVE and read SOCHO SOCMND tokens separated by '|'
+        pos = rest.find('|');
+        if (pos == string::npos) continue;
+        strncpy(cb.SOHIEUMB, rest.substr(0, pos).c_str(), 15);
+        cb.SOHIEUMB[15] = '\0';
+        rest = rest.substr(pos + 1);
+
+        pos = rest.find('|');
+        if (pos == string::npos) continue;
+        cb.SOCHO = atoi(rest.substr(0, pos).c_str());
+        rest = rest.substr(pos + 1);
+
         if (cb.SOCHO > 0) {
             cb.DSVE.ds = new Ve[cb.SOCHO];
             cb.DSVE.soLuongVe = cb.SOCHO;
             for (int i = 0; i < cb.SOCHO; i++) {
-                // read up to next '|' into SOCMND
-                f.getline(cb.DSVE.ds[i].SOCMND, 16, '|');
                 cb.DSVE.ds[i].SOVE = i + 1;
-                // Ensure string terminator exists (getline does)
+                cb.DSVE.ds[i].SOCMND[0] = '\0';
+                pos = rest.find('|');
+                if (pos == string::npos) {
+                    strncpy(cb.DSVE.ds[i].SOCMND, rest.c_str(), 15);
+                    cb.DSVE.ds[i].SOCMND[15] = '\0';
+                    rest.clear();
+                } else {
+                    strncpy(cb.DSVE.ds[i].SOCMND, rest.substr(0, pos).c_str(), 15);
+                    cb.DSVE.ds[i].SOCMND[15] = '\0';
+                    rest = rest.substr(pos + 1);
+                }
             }
         } else {
             cb.DSVE.ds = NULL;
