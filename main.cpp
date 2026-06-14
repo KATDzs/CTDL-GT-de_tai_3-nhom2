@@ -629,7 +629,10 @@ void handleHuyVeCLI(PTRCB &dscb, TreeHK &dshk) {
 
 void handleInDanhSachCLI(PTRCB &dscb, TreeHK &dshk) {
 	PTRCB p = ChonChuyenBayTheoSoHieu(dscb, "in danh sach hanh khach");
-	if (!p) { cout << "Khong tim thay chuyen bay!\n"; return; }
+	if (!p) { 
+		if (!uiConsumeInputCancel()) cout << "Khong tim thay chuyen bay!\n";
+		return; 
+	}
 
 	string lines[UI_REF_MAX_LINES];
 	int lineCount = 0;
@@ -675,15 +678,15 @@ void handleInChuyenBayTheoNgayCLI(PTRCB &dscb) {
 	string values[5] = {"", "", "", "", ""};
 	int ngay, thang, nam;
 
-	if (!uiFormReadInt("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 0, ngay)) return;
-	if (!uiFormReadInt("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 1, thang)) return;
-	if (!uiFormReadInt("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 2, nam)) return;
-	if (!uiFormReadLine("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 3)) return;
+	if (!uiFormReadInt("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 0, ngay)) { if (uiConsumeInputCancel()) return; else return; }
+	if (!uiFormReadInt("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 1, thang)) { if (uiConsumeInputCancel()) return; else return; }
+	if (!uiFormReadInt("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 2, nam)) { if (uiConsumeInputCancel()) return; else return; }
+	if (!uiFormReadLine("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 3)) { if (uiConsumeInputCancel()) return; else return; }
 
 	char noiDiaBuf[41];
 	strncpy(noiDiaBuf, values[3].c_str(), 40); noiDiaBuf[40] = '\0';
 	
-	if (!uiFormReadLine("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 4)) return;
+	if (!uiFormReadLine("IN CHUYEN BAY THEO NGAY", NULL, 0, labels, values, fieldCount, 4)) { if (uiConsumeInputCancel()) return; else return; }
 
 	char noiDenBuf[41];
 	strncpy(noiDenBuf, values[4].c_str(), 40); noiDenBuf[40] = '\0';
@@ -710,7 +713,10 @@ void handleInChuyenBayTheoNgayCLI(PTRCB &dscb) {
 
 void handleInVeConTrongCLI(PTRCB &dscb) {
 	PTRCB p = ChonChuyenBayTheoSoHieu(dscb, "in ve con trong");
-	if (!p) { cout << "Khong tim thay chuyen bay!\n"; return; }
+	if (!p) { 
+		if (!uiConsumeInputCancel()) cout << "Khong tim thay chuyen bay!\n";
+		return; 
+	}
 
 	string lines[UI_REF_MAX_LINES];
 	int lineCount = TaoThamChieuVeConTrong(p->cb, lines, UI_REF_MAX_LINES);
