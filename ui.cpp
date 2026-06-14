@@ -46,9 +46,8 @@ static void uiEnableRaw() {
     tcgetattr(STDIN_FILENO, &ui_orig_termios);
     struct termios raw = ui_orig_termios;
     raw.c_lflag &= ~(ECHO | ICANON);
-    // Make reads return immediately or after a short timeout so that
-    // pressing Esc alone doesn't block waiting for additional bytes.
-    raw.c_cc[VMIN] = 0;
+    // Wait for at least 1 character with timeout for escape sequences
+    raw.c_cc[VMIN] = 1;
     raw.c_cc[VTIME] = 10; // tenths of a second (1 second for macOS arrow keys)
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
     ui_raw = true;
